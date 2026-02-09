@@ -410,7 +410,7 @@ function getPdfBodyHtml() {
           <tr class="total-row"><td>TOTAL</td>${footerCells}</tr>
         </tfoot>
       </table>
-      <div class="note">Generated from NinetyTwo Admin. Values reflect current order data.</div>
+      <div class="note">Values reflect current order data</div>
   `;
 }
 
