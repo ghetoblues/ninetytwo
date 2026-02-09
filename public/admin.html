@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>NinetyTwo Admin</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <div class="page admin-page">
+      <header class="topbar">
+        <div class="brand">
+          <img src="/logo_white.png" alt="NinetyTwo" class="brand-logo" />
+        </div>
+        <div class="order-title">Admin</div>
+      </header>
+
+      <section class="admin-card">
+        <h2>Create order page</h2>
+        <form id="create-form" class="form">
+          <label>
+            ID
+            <input type="text" name="slug" required placeholder="fc_name" />
+          </label>
+          <label>
+            Title
+            <input type="text" name="title" required placeholder="FC NAME" />
+          </label>
+          <fieldset class="columns-fieldset">
+            <legend>Columns</legend>
+            <label><input type="checkbox" name="columns" value="name" /> NAME</label>
+            <label><input type="checkbox" name="columns" value="number" /> NUMBER</label>
+            <label><input type="checkbox" name="columns" value="height_cm" /> HEIGHT</label>
+            <label><input type="checkbox" name="columns" value="weight_kg" /> WEIGHT</label>
+            <label><input type="checkbox" name="columns" value="size" /> JERSEY SIZE</label>
+            <label><input type="checkbox" name="columns" value="size_shorts" /> SHORTS SIZE</label>
+            <label><input type="checkbox" name="columns" value="size_socks" /> SOCKS SIZE</label>
+            <label><input type="checkbox" name="columns" value="type" /> TYPE</label>
+            <label><input type="checkbox" name="columns" value="color" /> COLOR</label>
+            <label><input type="checkbox" name="columns" value="destination" /> DESTINATION</label>
+            <label><input type="checkbox" name="columns" value="qty_jersey" /> QUANTITY JERSEY</label>
+            <label><input type="checkbox" name="columns" value="qty_shorts" /> QUANTITY SHORTS</label>
+            <label><input type="checkbox" name="columns" value="qty_socks" /> QUANTITY SOCKS</label>
+            <label><input type="checkbox" name="columns" value="price_jersey" /> JERSEY PRICE</label>
+            <label><input type="checkbox" name="columns" value="price_shorts" /> SHORTS PRICE</label>
+            <label><input type="checkbox" name="columns" value="price_socks" /> SOCKS PRICE</label>
+            <label><input type="checkbox" name="columns" value="total_price" /> TOTAL PRICE</label>
+          </fieldset>
+          <fieldset class="columns-fieldset">
+            <legend>Units</legend>
+            <label>
+              pcs unit
+              <select name="unitPcsLabel">
+                <option value="pcs" selected>pcs</option>
+                <option value="шт">шт</option>
+              </select>
+            </label>
+            <label>
+              currency unit
+              <select name="unitCurrencyLabel">
+                <option value="EUR" selected>EUR</option>
+                <option value="RSD">RSD</option>
+                <option value="RUB">RUB</option>
+                <option value="USD">USD</option>
+              </select>
+            </label>
+          </fieldset>
+          <label>
+            Rows count
+            <input type="number" name="rowsCount" value="20" min="1" />
+          </label>
+          <label>
+            Jersey price
+            <input type="number" step="0.1" name="priceJersey" value="21.9" data-price-field="price_jersey" />
+          </label>
+          <label>
+            Shorts price
+            <input type="number" step="0.1" name="priceShorts" value="7.7" data-price-field="price_shorts" />
+          </label>
+          <label>
+            Socks price
+            <input type="number" step="0.1" name="priceSocks" value="0" data-price-field="price_socks" />
+          </label>
+          <button class="btn" type="submit">Create</button>
+        </form>
+        <div id="create-result" class="result"></div>
+      </section>
+
+      <section class="admin-card">
+        <h2>Existing orders</h2>
+        <div id="orders-list" class="orders-list">Loading…</div>
+      </section>
+    </div>
+
+    <script src="/admin.js"></script>
+  </body>
+</html>
