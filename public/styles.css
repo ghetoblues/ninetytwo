@@ -122,9 +122,9 @@ body.home .page {
 }
 
 .page {
-  max-width: 1200px;
+  max-width: 1600px;
   margin: 0 auto;
-  padding: 16px;
+  padding: 10px 12px;
 }
 
 .topbar {
@@ -187,8 +187,8 @@ body.home .page {
 .sheet {
   width: 100%;
   border-collapse: collapse;
-  min-width: 1000px;
-  table-layout: auto;
+  min-width: 0;
+  table-layout: fixed;
 }
 
 .sheet th,
@@ -198,7 +198,27 @@ body.home .page {
   padding: 8px;
   font-size: 13px;
   text-align: left;
-  min-width: 120px;
+  min-width: 0;
+  word-break: break-word;
+}
+
+.sheet tbody tr:nth-child(even) td {
+  background: #f6f8f4;
+}
+
+.sheet tbody tr.active-row td {
+  background: #eef5ef;
+}
+
+.sheet tbody tr.active-row td.sticky-col {
+  background: #e7efe8;
+}
+
+.sheet th.delete-col,
+.sheet td.delete-col {
+  width: 36px;
+  min-width: 36px;
+  text-align: center;
 }
 
 .sheet th {
@@ -206,28 +226,57 @@ body.home .page {
   top: 0;
   background: #e6ede7;
   font-weight: 600;
-  z-index: 2;
+  z-index: 3;
+  padding-top: 18px;
 }
 
 .sheet th .unit-hint {
-  margin-left: 6px;
+  position: absolute;
+  top: 6px;
+  right: 6px;
   padding: 2px 6px;
   border-radius: 999px;
   background: #dfe7df;
   color: #2f3f38;
-  font-size: 10px;
+  font-size: 9px;
   font-weight: 600;
 }
 
-.sheet td:first-child,
-.sheet th:first-child {
+.sheet th.sticky-col,
+.sheet td.sticky-col {
   position: sticky;
-  left: 0;
+  z-index: 2;
   background: #eef2ee;
-  z-index: 1;
+}
+
+.sheet td.sticky-col {
+  background: #f1f5f1;
+}
+
+.sheet th.sticky-0,
+.sheet td.sticky-0 {
+  left: 0;
   width: 48px;
   min-width: 48px;
+  max-width: 48px;
 }
+
+.sheet th.sticky-1,
+.sheet td.sticky-1 {
+  left: 48px;
+  width: 180px;
+  min-width: 180px;
+  max-width: 180px;
+}
+
+.sheet th.sticky-2,
+.sheet td.sticky-2 {
+  left: 228px;
+  width: 120px;
+  min-width: 120px;
+  max-width: 120px;
+}
+
 
 .cell-input,
 .cell-select {
@@ -245,24 +294,40 @@ body.home .page {
   color: var(--brand-2);
 }
 
+.delete-row-btn {
+  border: none;
+  background: #f1f3ee;
+  color: #5c6b65;
+  width: 24px;
+  height: 24px;
+  border-radius: 999px;
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.delete-row-btn:hover {
+  background: #e4e9e2;
+  color: #2a3a33;
+}
+
 .suggestion {
   margin-top: 6px;
-  font-size: 11px;
+  font-size: 10px;
   color: var(--muted);
   display: flex;
   gap: 6px;
   align-items: center;
 }
 
-.suggestion button {
-  border: none;
-  background: var(--accent);
-  color: #1d1d1d;
-  padding: 2px 6px;
-  border-radius: 999px;
-  font-size: 11px;
+.suggestion[data-mode="match"] .suggestion-text {
+  color: #1a5a45;
   font-weight: 600;
-  cursor: pointer;
+}
+
+.suggestion[data-mode="nearest"] .suggestion-text {
+  color: #4b5b54;
+  font-weight: 600;
 }
 
 .cards {
@@ -294,6 +359,8 @@ body.home .page {
   gap: 6px;
   grid-template-columns: auto auto;
   align-items: center;
+  position: relative;
+  padding-top: 12px;
 }
 
 .card input,
@@ -305,14 +372,15 @@ body.home .page {
 }
 
 .card .unit-hint {
-  margin-left: 6px;
+  position: absolute;
+  top: 4px;
+  right: 0;
   padding: 2px 6px;
   border-radius: 999px;
   background: #e7ece7;
   color: #2f3f38;
-  font-size: 10px;
+  font-size: 9px;
   font-weight: 600;
-  justify-self: start;
 }
 
 @media (max-width: 900px) {
@@ -328,6 +396,11 @@ body.home .page {
   background: #f3f6f1;
   border-radius: 10px;
   font-weight: 600;
+}
+
+.card .delete-row-btn.card-delete {
+  justify-self: end;
+  margin-top: 6px;
 }
 
 .add-card {
@@ -447,6 +520,37 @@ body.home .page {
 .orders-list {
   font-size: 13px;
   color: var(--muted);
+}
+
+.order-item {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 0;
+  border-bottom: 1px dashed #d7ded6;
+}
+
+.order-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.mini-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: #f1f3ee;
+  color: #2a3a33;
+  font-size: 12px;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.mini-btn:hover {
+  background: #e2e7e1;
 }
 
 @media (max-width: 900px) {

@@ -7,6 +7,7 @@ const {
   getOrderBySlug,
   addRow,
   updateRow,
+  deleteRow,
   listOrders
 } = require("./db");
 
@@ -20,7 +21,7 @@ app.use(express.static(path.join(__dirname, "public"), { index: false }));
 
 function baseColumns({ priceJersey, priceShorts, priceSocks }) {
   return [
-    { key: "name", label: "NAME", type: "text" },
+    { key: "name", label: "SURNAME", type: "text" },
     { key: "number", label: "NUMBER", type: "text" },
     { key: "height_cm", label: "HEIGHT", type: "number" },
     { key: "weight_kg", label: "WEIGHT", type: "number" },
@@ -195,6 +196,21 @@ app.patch("/api/orders/:slug/rows/:id", async (req, res) => {
   }
   const rowId = Number(req.params.id);
   const ok = await updateRow(order.id, rowId, req.body && req.body.data);
+  if (!ok) {
+    res.status(404).json({ error: "Row not found" });
+    return;
+  }
+  res.json({ ok: true });
+});
+
+app.delete("/api/orders/:slug/rows/:id", async (req, res) => {
+  const order = await getOrderBySlug(req.params.slug);
+  if (!order) {
+    res.status(404).json({ error: "Order not found" });
+    return;
+  }
+  const rowId = Number(req.params.id);
+  const ok = await deleteRow(order.id, rowId);
   if (!ok) {
     res.status(404).json({ error: "Row not found" });
     return;

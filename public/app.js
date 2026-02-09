@@ -2,9 +2,14 @@ const orderTitleEl = document.getElementById("order-title");
 const sheetEl = document.getElementById("sheet");
 const cardsEl = document.getElementById("cards");
 const pdfButton = document.getElementById("download-pdf");
+const actionsEl = document.querySelector(".actions");
+const pdfMode = new URLSearchParams(window.location.search).get("pdf");
 const saveTimers = new Map();
 let order = null;
 let rows = [];
+let editableColKeys = [];
+let editableColIndexByKey = {};
+let hidePrices = false;
 
 const sizeChart = [
   { size: "XS", height: [150, 160], weight: [40, 45] },
@@ -72,6 +77,7 @@ function updateSuggestionElement(el, row) {
   }
   el.style.display = "flex";
   el.dataset.suggested = suggested.size;
+  el.dataset.mode = suggested.mode;
   const text = el.querySelector(".suggestion-text");
   if (text) {
     text.textContent =
@@ -97,18 +103,7 @@ function renderSuggestion(col, row, container, onApply) {
   const text = document.createElement("span");
   text.className = "suggestion-text";
 
-  const button = document.createElement("button");
-  button.type = "button";
-  button.textContent = "Use";
-  button.addEventListener("click", () => {
-    const value = hint.dataset.suggested;
-    if (!value) return;
-    onApply(value);
-    updateSuggestionElements(row);
-  });
-
   hint.appendChild(text);
-  hint.appendChild(button);
   container.appendChild(hint);
   updateSuggestionElement(hint, row);
 }
@@ -144,6 +139,24 @@ function getPriceDefault(key) {
   return priceCol && typeof priceCol.default !== "undefined" ? priceCol.default : 0;
 }
 
+function getEditableColumns() {
+  return order ? order.columns.filter((col) => col.type !== "fixed" && col.type !== "formula") : [];
+}
+
+function focusNextEditable(current) {
+  if (!sheetEl) return;
+  const list = Array.from(sheetEl.querySelectorAll("input.cell-input, select.cell-select"));
+  const index = list.indexOf(current);
+  if (index < 0) return;
+  const next = list[index + 1];
+  if (next) next.focus();
+}
+
+function setupActions() {
+  if (!actionsEl) return;
+  actionsEl.innerHTML = "";
+}
+
 function escapeHtml(value) {
   return String(value)
     .replace(/&/g, "&amp;")
@@ -164,6 +177,26 @@ function formatPdfCell(col, value) {
     return formatMoney(value);
   }
   return String(value);
+}
+
+function getPdfColumns() {
+  if (pdfMode === "factory") {
+    return order.columns.filter(
+      (col) =>
+        col.key !== "price_jersey" &&
+        col.key !== "price_shorts" &&
+        col.key !== "price_socks" &&
+        col.key !== "total_price"
+    );
+  }
+  return order.columns;
+}
+
+function isRowZeroQuantity(rowData) {
+  const qtyJersey = Number(rowData.qty_jersey || 0);
+  const qtyShorts = Number(rowData.qty_shorts || 0);
+  const qtySocks = Number(rowData.qty_socks || 0);
+  return qtyJersey === 0 && qtyShorts === 0 && qtySocks === 0;
 }
 
 function getPdfMeta() {
@@ -296,16 +329,18 @@ function getPdfStyles() {
 
 function getPdfBodyHtml() {
   const { dateLabel, timeLabel, currencyLabel, totalPrice } = getPdfMeta();
+  const pdfColumns = getPdfColumns();
 
-  const columnHeaders = order.columns.map((col) => {
+  const columnHeaders = pdfColumns.map((col) => {
     const unit = unitByKey[col.key];
     const label = unit ? `${col.label} (${unit})` : col.label;
     return `<th>${escapeHtml(label)}</th>`;
   });
 
   const bodyRows = rows
+    .filter((row) => !isRowZeroQuantity(row.data || {}))
     .map((row, idx) => {
-      const cells = order.columns
+      const cells = pdfColumns
         .map((col) => {
           const value = getValue(row.data, col);
           return `<td>${escapeHtml(formatPdfCell(col, value))}</td>`;
@@ -315,7 +350,7 @@ function getPdfBodyHtml() {
     })
     .join("");
 
-  const footerCells = order.columns
+  const footerCells = pdfColumns
     .map((col) => {
       if (col.key === "qty_jersey" || col.key === "qty_shorts" || col.key === "qty_socks") {
         return `<td>${escapeHtml(sumColumn(col.key))}</td>`;
@@ -327,6 +362,31 @@ function getPdfBodyHtml() {
     })
     .join("");
 
+  const summaryCards = [];
+  summaryCards.push(`
+        <div class="summary-card">
+          <span>Total rows</span>
+          <strong>${escapeHtml(rows.length)}</strong>
+        </div>`);
+  if (pdfMode !== "factory") {
+    summaryCards.push(`
+        <div class="summary-card">
+          <span>Total price</span>
+          <strong>${escapeHtml(formatMoney(totalPrice))} ${escapeHtml(currencyLabel)}</strong>
+        </div>`);
+  } else {
+    summaryCards.push(`
+        <div class="summary-card">
+          <span>Prices</span>
+          <strong>Hidden</strong>
+        </div>`);
+  }
+  summaryCards.push(`
+        <div class="summary-card">
+          <span>Units</span>
+          <strong>${escapeHtml(currencyLabel)}</strong>
+        </div>`);
+
   return `
       <div class="header">
         <img class="logo" id="pdf-logo" src="/logo_black.png" alt="NinetyTwo" />
@@ -337,18 +397,7 @@ function getPdfBodyHtml() {
         </div>
       </div>
       <div class="summary">
-        <div class="summary-card">
-          <span>Total rows</span>
-          <strong>${escapeHtml(rows.length)}</strong>
-        </div>
-        <div class="summary-card">
-          <span>Total price</span>
-          <strong>${escapeHtml(formatMoney(totalPrice))} ${escapeHtml(currencyLabel)}</strong>
-        </div>
-        <div class="summary-card">
-          <span>Units</span>
-          <strong>${escapeHtml(currencyLabel)}</strong>
-        </div>
+        ${summaryCards.join("")}
       </div>
       <table>
         <thead>
@@ -412,6 +461,29 @@ function exportPdf() {
   ]).then(() => setTimeout(finish, 100));
 }
 
+function renderPdfInPlace() {
+  const appPage = document.querySelector(".page");
+  if (appPage) {
+    appPage.style.display = "none";
+  }
+
+  const styleEl = document.createElement("style");
+  styleEl.textContent = `
+    ${getPdfStyles()}
+    body { background: #fff; }
+  `;
+  document.head.appendChild(styleEl);
+
+  const pdfRoot = document.createElement("div");
+  pdfRoot.className = "page";
+  pdfRoot.innerHTML = getPdfBodyHtml();
+  document.body.appendChild(pdfRoot);
+
+  setTimeout(() => {
+    window.print();
+  }, 100);
+}
+
 function scheduleSave(rowId) {
   if (saveTimers.has(rowId)) clearTimeout(saveTimers.get(rowId));
   const timer = setTimeout(() => saveRow(rowId), 600);
@@ -428,13 +500,68 @@ async function saveRow(rowId) {
   });
 }
 
+async function deleteRowById(rowId) {
+  await fetch(`/api/orders/${order.slug}/rows/${rowId}`, { method: "DELETE" });
+  rows = rows.filter((row) => row.id !== rowId);
+  renderTable();
+  renderCards();
+}
+
+function handlePaste(event) {
+  const target = document.activeElement;
+  if (!target || !target.dataset) return;
+  const startRow = Number(target.dataset.rowIdx);
+  const startCol = Number(target.dataset.colIdx);
+  if (!Number.isFinite(startRow) || !Number.isFinite(startCol)) return;
+
+  const text = (event.clipboardData || window.clipboardData).getData("text");
+  if (!text) return;
+  event.preventDefault();
+
+  const lines = text.replace(/\r/g, "").split("\n");
+  if (lines.length && lines[lines.length - 1] === "") lines.pop();
+  if (lines.length === 0) return;
+
+  const updated = new Set();
+  lines.forEach((line, rIndex) => {
+    const cells = line.split("\t");
+    cells.forEach((rawCell, cIndex) => {
+      const rowIndex = startRow + rIndex;
+      const colIndex = startCol + cIndex;
+      const row = rows[rowIndex];
+      const key = editableColKeys[colIndex];
+      if (!row || !key) return;
+      const col = order.columns.find((c) => c.key === key);
+      if (!col) return;
+      let value = rawCell.trim();
+      if (col.type === "number") value = value.replace(",", ".");
+      if (col.type === "select" && !col.options.includes(value)) return;
+      row.data[key] = value;
+      updated.add(row.id);
+    });
+  });
+
+  renderTable();
+  renderCards();
+  refreshTotals();
+  updated.forEach((id) => saveRow(id));
+}
+
 function renderTable() {
+  const editableColumns = getEditableColumns();
+  editableColKeys = editableColumns.map((col) => col.key);
+  editableColIndexByKey = editableColKeys.reduce((acc, key, idx) => {
+    acc[key] = idx;
+    return acc;
+  }, {});
+
   const thead = document.createElement("thead");
   const headRow = document.createElement("tr");
   const indexTh = document.createElement("th");
   indexTh.textContent = "#";
+  indexTh.className = "sticky-col sticky-0 col-index";
   headRow.appendChild(indexTh);
-  order.columns.forEach((col) => {
+  order.columns.forEach((col, colIndex) => {
     const th = document.createElement("th");
     const label = document.createElement("span");
     label.textContent = col.label;
@@ -445,22 +572,43 @@ function renderTable() {
       unit.textContent = unitByKey[col.key];
       th.appendChild(unit);
     }
+    th.classList.add(`col-${col.key}`);
+    if (colIndex < 2) {
+      th.classList.add("sticky-col", `sticky-${colIndex + 1}`);
+    }
     headRow.appendChild(th);
   });
+  const deleteTh = document.createElement("th");
+  deleteTh.className = "delete-col";
+  deleteTh.textContent = "";
+  headRow.appendChild(deleteTh);
   thead.appendChild(headRow);
 
   const tbody = document.createElement("tbody");
   rows.forEach((row, idx) => {
     const tr = document.createElement("tr");
+    tr.addEventListener("focusin", () => tr.classList.add("active-row"));
+    tr.addEventListener("focusout", () => {
+      setTimeout(() => {
+        if (!tr.contains(document.activeElement)) tr.classList.remove("active-row");
+      }, 0);
+    });
     const indexTd = document.createElement("td");
     indexTd.textContent = String(idx + 1);
+    indexTd.className = "sticky-col sticky-0 col-index";
     tr.appendChild(indexTd);
 
-    order.columns.forEach((col) => {
+    order.columns.forEach((col, colIndex) => {
       const td = document.createElement("td");
+      td.classList.add(`col-${col.key}`);
+      if (colIndex < 2) {
+        td.classList.add("sticky-col", `sticky-${colIndex + 1}`);
+      }
       if (col.type === "select") {
         const select = document.createElement("select");
         select.className = "cell-select";
+        select.dataset.rowIdx = idx;
+        select.dataset.colIdx = editableColIndexByKey[col.key];
         const empty = document.createElement("option");
         empty.value = "";
         empty.textContent = "";
@@ -476,6 +624,12 @@ function renderTable() {
           row.data[col.key] = e.target.value;
           scheduleSave(row.id);
           refreshTotals();
+        });
+        select.addEventListener("keydown", (e) => {
+          if (e.key === "Enter") {
+            e.preventDefault();
+            focusNextEditable(select);
+          }
         });
         td.appendChild(select);
         renderSuggestion(col, row, td, (value) => {
@@ -499,6 +653,8 @@ function renderTable() {
         const input = document.createElement("input");
         input.className = "cell-input";
         input.type = col.type === "number" ? "number" : "text";
+        input.dataset.rowIdx = idx;
+        input.dataset.colIdx = editableColIndexByKey[col.key];
         input.value = row.data[col.key] || "";
         input.addEventListener("input", (e) => {
           row.data[col.key] = e.target.value;
@@ -512,10 +668,26 @@ function renderTable() {
           renderTable();
           renderCards();
         });
+        input.addEventListener("keydown", (e) => {
+          if (e.key === "Enter") {
+            e.preventDefault();
+            focusNextEditable(input);
+          }
+        });
         td.appendChild(input);
       }
       tr.appendChild(td);
     });
+
+    const deleteTd = document.createElement("td");
+    deleteTd.className = "delete-col";
+    const deleteBtn = document.createElement("button");
+    deleteBtn.type = "button";
+    deleteBtn.className = "delete-row-btn";
+    deleteBtn.textContent = "×";
+    deleteBtn.addEventListener("click", () => deleteRowById(row.id));
+    deleteTd.appendChild(deleteBtn);
+    tr.appendChild(deleteTd);
 
     tbody.appendChild(tr);
   });
@@ -539,11 +711,14 @@ function renderTable() {
     }
     totalRow.appendChild(td);
   });
+  const totalDelete = document.createElement("td");
+  totalDelete.className = "delete-col";
+  totalRow.appendChild(totalDelete);
 
   const addRowTr = document.createElement("tr");
   addRowTr.className = "add-row";
   const addRowTd = document.createElement("td");
-  addRowTd.colSpan = order.columns.length + 1;
+  addRowTd.colSpan = order.columns.length + 2;
   addRowTd.innerHTML = "<span class=\"plus\">+</span> Add new row";
   addRowTd.addEventListener("click", addRow);
   addRowTr.appendChild(addRowTd);
@@ -555,6 +730,11 @@ function renderTable() {
   sheetEl.appendChild(thead);
   sheetEl.appendChild(tbody);
   sheetEl.appendChild(tfoot);
+
+  if (!sheetEl.dataset.pasteBound) {
+    sheetEl.addEventListener("paste", handlePaste);
+    sheetEl.dataset.pasteBound = "1";
+  }
 }
 
 function renderCards() {
@@ -568,6 +748,7 @@ function renderCards() {
 
     order.columns.forEach((col) => {
       const label = document.createElement("label");
+      label.dataset.key = col.key;
       const labelText = document.createElement("span");
       labelText.textContent = col.label;
       label.appendChild(labelText);
@@ -635,6 +816,13 @@ function renderCards() {
 
       card.appendChild(label);
     });
+
+    const deleteBtn = document.createElement("button");
+    deleteBtn.type = "button";
+    deleteBtn.className = "delete-row-btn card-delete";
+    deleteBtn.textContent = "×";
+    deleteBtn.addEventListener("click", () => deleteRowById(row.id));
+    card.appendChild(deleteBtn);
 
     cardsEl.appendChild(card);
   });
@@ -715,10 +903,15 @@ async function loadOrder() {
   };
   renderTable();
   renderCards();
+  setupActions();
 }
 
 if (pdfButton) {
   pdfButton.addEventListener("click", exportPdf);
 }
 
-loadOrder();
+loadOrder().then(() => {
+  if (pdfMode === "full" || pdfMode === "factory") {
+    renderPdfInPlace();
+  }
+});

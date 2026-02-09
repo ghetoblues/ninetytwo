@@ -129,6 +129,14 @@ async function updateRow(orderId, rowId, data) {
   return res.rowCount > 0;
 }
 
+async function deleteRow(orderId, rowId) {
+  const res = await pool.query(
+    "DELETE FROM rows WHERE id = $1 AND order_id = $2",
+    [rowId, orderId]
+  );
+  return res.rowCount > 0;
+}
+
 async function listOrders() {
   const res = await pool.query(
     "SELECT id, slug, title, created_at FROM orders ORDER BY created_at DESC"
@@ -142,5 +150,6 @@ module.exports = {
   getOrderBySlug,
   addRow,
   updateRow,
+  deleteRow,
   listOrders
 };

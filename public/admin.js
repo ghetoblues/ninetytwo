@@ -29,12 +29,32 @@ async function loadOrders() {
   const list = document.createElement("div");
   data.orders.forEach((order) => {
     const item = document.createElement("div");
+    item.className = "order-item";
     const link = document.createElement("a");
     link.href = `/orders/${order.slug}`;
     link.textContent = `${order.title} (${order.slug})`;
     link.style.color = "#1a5a45";
     link.style.fontWeight = "600";
     item.appendChild(link);
+
+    const actions = document.createElement("div");
+    actions.className = "order-actions";
+
+    const fullBtn = document.createElement("a");
+    fullBtn.className = "mini-btn";
+    fullBtn.href = `/orders/${order.slug}?pdf=full`;
+    fullBtn.textContent = "Save full";
+    fullBtn.target = "_blank";
+    actions.appendChild(fullBtn);
+
+    const factoryBtn = document.createElement("a");
+    factoryBtn.className = "mini-btn";
+    factoryBtn.href = `/orders/${order.slug}?pdf=factory`;
+    factoryBtn.textContent = "Save factory";
+    factoryBtn.target = "_blank";
+    actions.appendChild(factoryBtn);
+
+    item.appendChild(actions);
     list.appendChild(item);
   });
   ordersList.innerHTML = "";
