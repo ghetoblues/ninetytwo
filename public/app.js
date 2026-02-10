@@ -738,8 +738,17 @@ function renderTable() {
   const tfoot = document.createElement("tfoot");
   const totalRow = document.createElement("tr");
   totalRow.className = "footer-row";
+  
+  // Find the index of first qty column
+  const firstQtyIndex = order.columns.findIndex(
+    (col) => col.key === "qty_jersey" || col.key === "qty_shorts" || col.key === "qty_socks"
+  );
+  
+  // TOTAL label spans from index column through all columns before first qty column
+  // colspan = 1 (index) + firstQtyIndex (columns before qty)
   const totalLabel = document.createElement("td");
   totalLabel.textContent = "TOTAL";
+  totalLabel.colSpan = firstQtyIndex >= 0 ? firstQtyIndex + 1 : order.columns.length + 1;
   totalRow.appendChild(totalLabel);
 
   order.columns.forEach((col) => {
