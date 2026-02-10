@@ -185,18 +185,6 @@ async function deleteOrder(orderId) {
   return res.rowCount > 0;
 }
 
-async function updateOrderConfig(orderId, newColumns, colorOptions = []) {
-  const res = await pool.query(
-    "UPDATE orders SET columns_json = $1, config_json = jsonb_set(config_json, '{colorOptions}', $2::jsonb) WHERE id = $3",
-    [
-      JSON.stringify(newColumns),
-      JSON.stringify(colorOptions),
-      orderId
-    ]
-  );
-  return res.rowCount > 0;
-}
-
 module.exports = {
   initDb,
   createOrder,
