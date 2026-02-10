@@ -751,7 +751,10 @@ function renderTable() {
   totalLabel.colSpan = firstQtyIndex >= 0 ? firstQtyIndex + 1 : order.columns.length + 1;
   totalRow.appendChild(totalLabel);
 
-  order.columns.forEach((col) => {
+  // Add cells only for columns after the TOTAL label
+  const startIdx = firstQtyIndex >= 0 ? firstQtyIndex : 0;
+  for (let i = startIdx; i < order.columns.length; i++) {
+    const col = order.columns[i];
     const td = document.createElement("td");
     td.dataset.key = col.key;
     if (col.key === "qty_jersey" || col.key === "qty_shorts" || col.key === "qty_socks") {
@@ -762,7 +765,8 @@ function renderTable() {
       td.textContent = "";
     }
     totalRow.appendChild(td);
-  });
+  }
+  
   const totalDelete = document.createElement("td");
   totalDelete.className = "delete-col";
   totalRow.appendChild(totalDelete);
