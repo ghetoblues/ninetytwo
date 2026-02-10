@@ -158,6 +158,25 @@ async function listOrders() {
   return res.rows;
 }
 
+async function updateOrderConfig(orderId, columns, colorOptions) {
+  // First get current config to preserve other fields
+  const configRes = await pool.query(
+    "SELECT config_json FROM orders WHERE id = $1",
+    [orderId]
+  );
+  
+  if (configRes.rows.length === 0) return false;
+  
+  const currentConfig = JSON.parse(configRes.rows[0].config_json || "{}");
+  const updatedConfig = { ...currentConfig, colorOptions };
+  
+  const res = await pool.query(
+    "UPDATE orders SET columns_json = $1, config_json = $2 WHERE id = $3",
+    [JSON.stringify(columns), JSON.stringify(updatedConfig), orderId]
+  );
+  return res.rowCount > 0;
+}
+
 async function deleteOrder(orderId) {
   const res = await pool.query(
     "DELETE FROM orders WHERE id = $1",
