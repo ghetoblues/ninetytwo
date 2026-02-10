@@ -61,6 +61,14 @@ async function loadOrders() {
     factoryBtn.target = "_blank";
     actions.appendChild(factoryBtn);
 
+    const editBtn = document.createElement("button");
+    editBtn.className = "mini-btn";
+    editBtn.textContent = "Edit";
+    editBtn.addEventListener("click", () => {
+      openEditOrder(order.slug);
+    });
+    actions.appendChild(editBtn);
+
     const delBtn = document.createElement("button");
     delBtn.className = "mini-btn";
     delBtn.textContent = "Delete";
@@ -137,6 +145,130 @@ form.addEventListener("submit", async (e) => {
   form.reset();
   loadOrders();
 });
+
+const editForm = document.getElementById("edit-form");
+const editResultEl = document.getElementById("edit-result");
+const editSection = document.getElementById("edit-section");
+
+function updateEditColorOptionsVisibility() {
+  const colorCheckbox = editForm.querySelector("input[name=\"columns\"][value=\"color\"]");
+  const el = document.getElementById("edit-color-options");
+  if (!el || !colorCheckbox) return;
+  el.style.display = colorCheckbox.checked ? "block" : "none";
+}
+
+function updateEditPriceFields() {
+  const checked = new Set(
+    Array.from(editForm.querySelectorAll("input[name=\"columns\"]:checked")).map((el) => el.value)
+  );
+  const priceInputs = editForm.querySelectorAll("[data-price-field]");
+  priceInputs.forEach((input) => {
+    const label = input.closest("label");
+    if (!label) return;
+    label.style.display = checked.has(input.dataset.priceField) ? "grid" : "none";
+  });
+}
+
+async function openEditOrder(slug) {
+  const res = await fetch(`/api/orders/${slug}`);
+  if (!res.ok) {
+    alert("Failed to load order");
+    return;
+  }
+  const order = await res.json();
+  
+  // Set slug
+  document.getElementById("edit-slug").value = slug;
+  
+  // Load columns from order.columns
+  const columnKeys = new Set(order.columns.map(col => col.key));
+  editForm.querySelectorAll("input[name=\"columns\"]").forEach(checkbox => {
+    checkbox.checked = columnKeys.has(checkbox.value);
+  });
+  
+  // Load color options from config
+  const colorOptions = order.config?.colorOptions || [];
+  editForm.querySelectorAll("input[name=\"colorOptions\"]").forEach(checkbox => {
+    checkbox.checked = colorOptions.includes(checkbox.value);
+  });
+  
+  // Load prices - need to calculate them from columns
+  const priceJerseyCol = order.columns.find(col => col.key === "price_jersey");
+  const priceShortsCol = order.columns.find(col => col.key === "price_shorts");
+  const priceSocksCol = order.columns.find(col => col.key === "price_socks");
+  
+  document.querySelector("#edit-form input[name=\"priceJersey\"]").value = priceJerseyCol?.default || "";
+  document.querySelector("#edit-form input[name=\"priceShorts\"]").value = priceShortsCol?.default || "";
+  document.querySelector("#edit-form input[name=\"priceSocks\"]").value = priceSocksCol?.default || "";
+  
+  // Show edit section
+  editSection.style.display = "block";
+  updateEditColorOptionsVisibility();
+  updateEditPriceFields();
+  
+  // Scroll to edit section
+  editSection.scrollIntoView({ behavior: "smooth" });
+}
+
+function closeEditOrder() {
+  editSection.style.display = "none";
+  editResultEl.textContent = "";
+  editForm.reset();
+}
+
+editForm.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  editResultEl.textContent = "";
+  
+  const slug = document.getElementById("edit-slug").value;
+  if (!slug) {
+    editResultEl.textContent = "Error: no slug";
+    return;
+  }
+  
+  const formData = new FormData(editForm);
+  const columns = Array.from(editForm.querySelectorAll("input[name=\"columns\"]:checked")).map(el => el.value);
+  const colors = Array.from(editForm.querySelectorAll("input[name=\"colorOptions\"]:checked")).map(el => el.value);
+  
+  const payload = {
+    columnsKeys: columns,
+    colorOptions: colors,
+    priceJersey: Number(document.querySelector("#edit-form input[name=\"priceJersey\"]").value || 0),
+    priceShorts: Number(document.querySelector("#edit-form input[name=\"priceShorts\"]").value || 0),
+    priceSocks: Number(document.querySelector("#edit-form input[name=\"priceSocks\"]").value || 0)
+  };
+  
+  const res = await fetch(`/api/orders/${slug}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload)
+  });
+  
+  if (res.status === 401) {
+    window.location.href = "/";
+    return;
+  }
+  
+  const data = await res.json();
+  if (!res.ok) {
+    editResultEl.textContent = data.error || "Error";
+    return;
+  }
+  
+  editResultEl.textContent = "Order updated successfully";
+  setTimeout(() => closeEditOrder(), 1500);
+  loadOrders();
+});
+
+editForm.addEventListener("change", (e) => {
+  if (!e.target) return;
+  if (e.target.name === "columns") {
+    updateEditColorOptionsVisibility();
+    updateEditPriceFields();
+  }
+});
+
+document.getElementById("cancel-edit").addEventListener("click", closeEditOrder);
 
 loadOrders();
 updatePriceFields();
