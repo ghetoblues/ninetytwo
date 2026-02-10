@@ -107,7 +107,10 @@ form.addEventListener("submit", async (e) => {
   // sport is included in formData, but colorOptions can be multiple values
   const colors = Array.from(form.querySelectorAll("input[name=\"colorOptions\"]:checked")).map((el) => el.value);
   payload.colorOptions = colors;
-
+  
+  // language is in formData, also ensure sport is present
+  payload.language = payload.language || "ENG";
+  payload.sport = payload.sport || "Football";
   if (columns.length === 0) {
     resultEl.textContent = "Select at least one column";
     return;

@@ -48,6 +48,27 @@ function inRange(value, range) {
   return value >= range[0] && value <= range[1];
 }
 
+function getOptionValues(options) {
+  // Handle both array of strings and array of {value, label} objects
+  if (!Array.isArray(options)) return [];
+  if (options.length === 0) return [];
+  if (typeof options[0] === 'object' && options[0].value) {
+    return options.map(opt => opt.value);
+  }
+  return options;
+}
+
+function getOptionLabel(optionValue, options) {
+  // Get display label for option value
+  if (!Array.isArray(options)) return String(optionValue);
+  if (options.length === 0) return String(optionValue);
+  if (typeof options[0] === 'object' && options[0].value) {
+    const found = options.find(opt => opt.value === optionValue);
+    return found ? found.label : String(optionValue);
+  }
+  return String(optionValue);
+}
+
 function suggestSize(rowData) {
   const height = Number(rowData.height_cm);
   const weight = Number(rowData.weight_kg);
@@ -556,7 +577,7 @@ function handlePaste(event) {
       if (!col) return;
       let value = rawCell.trim();
       if (col.type === "number") value = value.replace(",", ".");
-      if (col.type === "select" && !col.options.includes(value)) return;
+      if (col.type === "select" && !getOptionValues(col.options).includes(value)) return;
       row.data[key] = value;
       updated.add(row.id);
     });
@@ -634,10 +655,11 @@ function renderTable() {
         empty.value = "";
         empty.textContent = "";
         select.appendChild(empty);
-        col.options.forEach((opt) => {
+        getOptionValues(col.options).forEach((optValue) => {
+          const optLabel = getOptionLabel(optValue, col.options);
           const option = document.createElement("option");
-          option.value = opt;
-          option.textContent = opt;
+          option.value = optValue;
+          option.textContent = optLabel;
           select.appendChild(option);
         });
         select.value = row.data[col.key] || "";
@@ -786,10 +808,11 @@ function renderCards() {
         empty.value = "";
         empty.textContent = "";
         select.appendChild(empty);
-        col.options.forEach((opt) => {
+        getOptionValues(col.options).forEach((optValue) => {
+          const optLabel = getOptionLabel(optValue, col.options);
           const option = document.createElement("option");
-          option.value = opt;
-          option.textContent = opt;
+          option.value = optValue;
+          option.textContent = optLabel;
           select.appendChild(option);
         });
         select.value = row.data[col.key] || "";
