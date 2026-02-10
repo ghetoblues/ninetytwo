@@ -54,6 +54,25 @@ async function loadOrders() {
     factoryBtn.target = "_blank";
     actions.appendChild(factoryBtn);
 
+    const delBtn = document.createElement("button");
+    delBtn.className = "mini-btn";
+    delBtn.textContent = "Delete";
+    delBtn.addEventListener("click", async () => {
+      if (!confirm(`Delete order ${order.slug}? This cannot be undone.`)) return;
+      const res = await fetch(`/api/orders/${order.slug}`, { method: "DELETE" });
+      if (res.status === 401) {
+        window.location.href = "/";
+        return;
+      }
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        alert(data.error || "Error deleting order");
+        return;
+      }
+      loadOrders();
+    });
+    actions.appendChild(delBtn);
+
     item.appendChild(actions);
     list.appendChild(item);
   });

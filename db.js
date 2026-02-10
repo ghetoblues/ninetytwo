@@ -144,6 +144,14 @@ async function listOrders() {
   return res.rows;
 }
 
+async function deleteOrder(orderId) {
+  const res = await pool.query(
+    "DELETE FROM orders WHERE id = $1",
+    [orderId]
+  );
+  return res.rowCount > 0;
+}
+
 module.exports = {
   initDb,
   createOrder,
@@ -152,4 +160,6 @@ module.exports = {
   updateRow,
   deleteRow,
   listOrders
+  ,
+  deleteOrder
 };
