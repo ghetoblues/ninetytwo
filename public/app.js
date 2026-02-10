@@ -22,6 +22,19 @@ const sizeChart = [
   { size: "4XL", height: [190, 195], weight: [90, 100] }
 ];
 
+const hockeySizeChart = [
+  { size: "110", height: [105, 115] },
+  { size: "120", height: [116, 125] },
+  { size: "130", height: [126, 135] },
+  { size: "140", height: [136, 145] },
+  { size: "150", height: [146, 155] },
+  { size: "160/M", height: [156, 165] },
+  { size: "170/L", height: [166, 175] },
+  { size: "180/XL", height: [176, 185] },
+  { size: "190/XXL", height: [186, 195] },
+  { size: "190/3XL", height: [196, 999] }
+];
+
 let unitByKey = {};
 
 function getSlug() {
@@ -40,6 +53,14 @@ function suggestSize(rowData) {
   const weight = Number(rowData.weight_kg);
   const hasHeight = Number.isFinite(height) && height > 0;
   const hasWeight = Number.isFinite(weight) && weight > 0;
+  // if order configured as Hockey, use height-only hockey chart
+  if (order && order.config && order.config.sport === "Hockey") {
+    if (!hasHeight) return null;
+    const match = hockeySizeChart.find((r) => inRange(height, r.height));
+    if (match) return { size: match.size, mode: "match" };
+    return null;
+  }
+
   if (!hasHeight || !hasWeight) return null;
   if (height >= 200 && weight >= 100) return { size: "5XL", mode: "match" };
 

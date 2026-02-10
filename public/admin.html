@@ -67,6 +67,23 @@
             </label>
           </fieldset>
           <label>
+            Sport
+            <select name="sport">
+              <option value="Football" selected>Football</option>
+              <option value="Hockey">Hockey</option>
+            </select>
+          </label>
+
+          <fieldset class="columns-fieldset" id="color-options" style="display:none">
+            <legend>Colors (select available)</legend>
+            <label><input type="checkbox" name="colorOptions" value="Blue" /> Blue</label>
+            <label><input type="checkbox" name="colorOptions" value="Yellow" /> Yellow</label>
+            <label><input type="checkbox" name="colorOptions" value="Red" /> Red</label>
+            <label><input type="checkbox" name="colorOptions" value="White" /> White</label>
+            <label><input type="checkbox" name="colorOptions" value="Black" /> Black</label>
+            <label><input type="checkbox" name="colorOptions" value="Green" /> Green</label>
+          </fieldset>
+          <label>
             Rows count
             <input type="number" name="rowsCount" value="20" min="1" />
           </label>

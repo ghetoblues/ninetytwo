@@ -20,7 +20,26 @@ const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "admin";
 app.use(express.json({ limit: "1mb" }));
 app.use(express.static(path.join(__dirname, "public"), { index: false }));
 
-function baseColumns({ priceJersey, priceShorts, priceSocks }) {
+function baseColumns({ priceJersey, priceShorts, priceSocks, colorOptions, sport }) {
+  // default football sizes
+  let sizeOptions = ["XS", "S", "M", "L", "XL", "2XL", "3XL", "4XL", "5XL"];
+  if (sport === "Hockey") {
+    sizeOptions = [
+      "110",
+      "120",
+      "130",
+      "140",
+      "150",
+      "160/M",
+      "170/L",
+      "180/XL",
+      "190/XXL",
+      "190/3XL"
+    ];
+  }
+
+  const colorOpts = Array.isArray(colorOptions) && colorOptions.length > 0 ? colorOptions : ["Blue", "Yellow"];
+
   return [
     { key: "name", label: "SURNAME", type: "text" },
     { key: "number", label: "NUMBER", type: "text" },
@@ -30,19 +49,19 @@ function baseColumns({ priceJersey, priceShorts, priceSocks }) {
       key: "size",
       label: "JERSEY SIZE",
       type: "select",
-      options: ["XS", "S", "M", "L", "XL", "2XL", "3XL", "4XL", "5XL"]
+      options: sizeOptions
     },
     {
       key: "size_shorts",
       label: "SHORTS SIZE",
       type: "select",
-      options: ["XS", "S", "M", "L", "XL", "2XL", "3XL", "4XL", "5XL"]
+      options: sizeOptions
     },
     {
       key: "size_socks",
       label: "SOCKS SIZE",
       type: "select",
-      options: ["XS", "S", "M", "L", "XL", "2XL", "3XL", "4XL", "5XL"]
+      options: sizeOptions
     },
     {
       key: "type",
@@ -54,7 +73,7 @@ function baseColumns({ priceJersey, priceShorts, priceSocks }) {
       key: "color",
       label: "COLOR",
       type: "select",
-      options: ["Blue", "Yellow"]
+      options: colorOpts
     },
     { key: "destination", label: "DESTINATION", type: "text" },
     { key: "qty_jersey", label: "QUANTITY JERSEY", type: "number" },
@@ -87,8 +106,8 @@ function baseColumns({ priceJersey, priceShorts, priceSocks }) {
   ];
 }
 
-function fcPolakoColumns({ priceJersey, priceShorts, columnsKeys }) {
-  const all = baseColumns({ priceJersey, priceShorts });
+function fcPolakoColumns({ priceJersey, priceShorts, priceSocks, columnsKeys, colorOptions, sport }) {
+  const all = baseColumns({ priceJersey, priceShorts, priceSocks, colorOptions, sport });
   if (!Array.isArray(columnsKeys) || columnsKeys.length === 0) return all;
   const allowed = new Set(columnsKeys);
   return all.filter((col) => allowed.has(col.key));
@@ -148,12 +167,14 @@ app.post("/api/orders", requireAdmin, async (req, res) => {
     unitCurrencyLabel = "EUR"
   } = req.body || {};
 
+  const { sport = "Football", colorOptions = [] } = req.body || {};
+
   if (!slug || !title) {
     res.status(400).json({ error: "slug and title are required" });
     return;
   }
 
-  const columns = fcPolakoColumns({ priceJersey, priceShorts, priceSocks, columnsKeys });
+  const columns = fcPolakoColumns({ priceJersey, priceShorts, priceSocks, columnsKeys, colorOptions, sport });
 
   try {
     await createOrder({
@@ -162,7 +183,8 @@ app.post("/api/orders", requireAdmin, async (req, res) => {
       columns,
       rowsCount,
       unitPcsLabel,
-      unitCurrencyLabel
+      unitCurrencyLabel,
+      config: { sport, colorOptions }
     });
     res.json({ ok: true, slug });
   } catch (err) {

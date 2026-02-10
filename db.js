@@ -17,6 +17,7 @@ async function initDb() {
       slug TEXT UNIQUE NOT NULL,
       title TEXT NOT NULL,
       columns_json TEXT NOT NULL,
+      config_json TEXT NOT NULL DEFAULT '{}',
       unit_pcs_label TEXT NOT NULL DEFAULT 'pcs',
       unit_currency_label TEXT NOT NULL DEFAULT 'EUR',
       created_at TIMESTAMPTZ NOT NULL
@@ -34,6 +35,11 @@ async function initDb() {
   `);
 
   await pool.query(`
+    ALTER TABLE orders
+      ADD COLUMN IF NOT EXISTS config_json TEXT NOT NULL DEFAULT '{}';
+  `);
+
+  await pool.query(`
     CREATE TABLE IF NOT EXISTS rows (
       id SERIAL PRIMARY KEY,
       order_id INTEGER NOT NULL REFERENCES orders(id) ON DELETE CASCADE,
@@ -48,18 +54,19 @@ function nowIso() {
   return new Date().toISOString();
 }
 
-async function createOrder({ slug, title, columns, rowsCount, unitPcsLabel, unitCurrencyLabel }) {
+async function createOrder({ slug, title, columns, rowsCount, unitPcsLabel, unitCurrencyLabel, config }) {
   const client = await pool.connect();
   try {
     await client.query("BEGIN");
     const createdAt = nowIso();
     const orderRes = await client.query(
-      `INSERT INTO orders (slug, title, columns_json, unit_pcs_label, unit_currency_label, created_at)
-       VALUES ($1, $2, $3, $4, $5, $6) RETURNING id`,
+      `INSERT INTO orders (slug, title, columns_json, config_json, unit_pcs_label, unit_currency_label, created_at)
+       VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id`,
       [
         slug,
         title,
         JSON.stringify(columns),
+        JSON.stringify(config || {}),
         unitPcsLabel || "pcs",
         unitCurrencyLabel || "EUR",
         createdAt
@@ -99,6 +106,13 @@ async function getOrderBySlug(slug) {
     slug: order.slug,
     title: order.title,
     columns: JSON.parse(order.columns_json),
+    config: (() => {
+      try {
+        return JSON.parse(order.config_json || "{}");
+      } catch (e) {
+        return {};
+      }
+    })(),
     unitLabels: {
       pcs: order.unit_pcs_label || "pcs",
       currency: order.unit_currency_label || "EUR"
