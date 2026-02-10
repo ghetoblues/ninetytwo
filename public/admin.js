@@ -201,6 +201,12 @@ async function openEditOrder(slug) {
   document.querySelector("#edit-form input[name=\"priceShorts\"]").value = priceShortsCol?.default || "";
   document.querySelector("#edit-form input[name=\"priceSocks\"]").value = priceSocksCol?.default || "";
   
+  // Load units
+  const unitPcsLabel = order.unitLabels?.pcs || "pcs";
+  const unitCurrencyLabel = order.unitLabels?.currency || "EUR";
+  document.querySelector("#edit-form select[name=\"unitPcsLabel\"]").value = unitPcsLabel;
+  document.querySelector("#edit-form select[name=\"unitCurrencyLabel\"]").value = unitCurrencyLabel;
+  
   // Show edit section
   editSection.style.display = "block";
   updateEditColorOptionsVisibility();
@@ -235,7 +241,9 @@ editForm.addEventListener("submit", async (e) => {
     colorOptions: colors,
     priceJersey: Number(document.querySelector("#edit-form input[name=\"priceJersey\"]").value || 0),
     priceShorts: Number(document.querySelector("#edit-form input[name=\"priceShorts\"]").value || 0),
-    priceSocks: Number(document.querySelector("#edit-form input[name=\"priceSocks\"]").value || 0)
+    priceSocks: Number(document.querySelector("#edit-form input[name=\"priceSocks\"]").value || 0),
+    unitPcsLabel: document.querySelector("#edit-form select[name=\"unitPcsLabel\"]").value,
+    unitCurrencyLabel: document.querySelector("#edit-form select[name=\"unitCurrencyLabel\"]").value
   };
   
   const res = await fetch(`/api/orders/${slug}`, {

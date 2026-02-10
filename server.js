@@ -10,7 +10,9 @@ const {
   deleteRow,
   listOrders,
   deleteOrder,
-  updateOrderConfig
+  updateOrderConfig,
+  updateOrderSettings,
+  updateOrderWithFullConfig
 } = require("./db");
 
 const app = express();
@@ -312,6 +314,73 @@ app.delete("/api/orders/:slug", requireAdmin, async (req, res) => {
   }
   res.json({ ok: true });
 });
+
+app.patch("/api/orders/:slug", requireAdmin, async (req, res) => {
+  const order = await getOrderBySlug(req.params.slug);
+  if (!order) {
+    res.status(404).json({ error: "Order not found" });
+    return;
+  }
+  
+  const {
+    columnsKeys,
+    colorOptions,
+    priceJersey,
+    priceShorts,
+    priceSocks,
+    unitPcsLabel,
+    unitCurrencyLabel
+  } = req.body || {};
+  
+  // Get current config to preserve sport
+  const sport = order.config?.sport || "Football";
+  const updatedConfig = { ...order.config, sport };
+  if (colorOptions !== undefined) {
+    updatedConfig.colorOptions = colorOptions;
+  }
+  
+  let newColumns = order.columns;
+  if (columnsKeys !== undefined && Array.isArray(columnsKeys)) {
+    // Rebuild columns from scratch
+    const baseColsResult = baseColumns({
+      priceJersey: priceJersey !== undefined ? Number(priceJersey) : getPriceFromColumns(order.columns, "price_jersey"),
+      priceShorts: priceShorts !== undefined ? Number(priceShorts) : getPriceFromColumns(order.columns, "price_shorts"),
+      priceSocks: priceSocks !== undefined ? Number(priceSocks) : getPriceFromColumns(order.columns, "price_socks"),
+      colorOptions: colorOptions || updatedConfig.colorOptions || [],
+      sport
+    });
+    
+    const allowed = new Set(columnsKeys);
+    newColumns = baseColsResult.filter((col) => allowed.has(col.key));
+  } else if (priceJersey !== undefined || priceShorts !== undefined || priceSocks !== undefined) {
+    // Just update prices in existing columns
+    newColumns = order.columns.map((col) => {
+      const copy = { ...col };
+      if (col.key === "price_jersey" && priceJersey !== undefined) copy.default = Number(priceJersey);
+      if (col.key === "price_shorts" && priceShorts !== undefined) copy.default = Number(priceShorts);
+      if (col.key === "price_socks" && priceSocks !== undefined) copy.default = Number(priceSocks);
+      return copy;
+    });
+  }
+  
+  const ok = await updateOrderWithFullConfig(order.id, {
+    columns: newColumns,
+    config: updatedConfig,
+    unitPcsLabel: unitPcsLabel || order.unitLabels.pcs,
+    unitCurrencyLabel: unitCurrencyLabel || order.unitLabels.currency
+  });
+  
+  if (!ok) {
+    res.status(500).json({ error: "Failed to update order" });
+    return;
+  }
+  res.json({ ok: true });
+});
+
+function getPriceFromColumns(columns, priceKey) {
+  const col = columns.find(c => c.key === priceKey);
+  return col?.default || 0;
+}
 
 app.get("/api/orders/:slug", async (req, res) => {
   const order = await getOrderBySlug(req.params.slug);

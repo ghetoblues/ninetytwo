@@ -177,6 +177,51 @@ async function updateOrderConfig(orderId, columns, colorOptions) {
   return res.rowCount > 0;
 }
 
+async function updateOrderSettings(orderId, { priceJersey, priceShorts, priceSocks, unitPcsLabel, unitCurrencyLabel }) {
+  // Update columns_json with new prices and return updated order
+  const orderRes = await pool.query("SELECT * FROM orders WHERE id = $1", [orderId]);
+  if (orderRes.rows.length === 0) return false;
+
+  const order = orderRes.rows[0];
+  const columns = JSON.parse(order.columns_json || "[]");
+  
+  // Update price fields in columns
+  columns.forEach((col) => {
+    if (col.key === "price_jersey" && priceJersey !== undefined) col.default = priceJersey;
+    if (col.key === "price_shorts" && priceShorts !== undefined) col.default = priceShorts;
+    if (col.key === "price_socks" && priceSocks !== undefined) col.default = priceSocks;
+  });
+
+  const res = await pool.query(
+    `UPDATE orders 
+     SET columns_json = $1, unit_pcs_label = $2, unit_currency_label = $3 
+     WHERE id = $4`,
+    [
+      JSON.stringify(columns),
+      unitPcsLabel || order.unit_pcs_label,
+      unitCurrencyLabel || order.unit_currency_label,
+      orderId
+    ]
+  );
+  return res.rowCount > 0;
+}
+
+async function updateOrderWithFullConfig(orderId, { columns, config, unitPcsLabel, unitCurrencyLabel }) {
+  const res = await pool.query(
+    `UPDATE orders 
+     SET columns_json = $1, config_json = $2, unit_pcs_label = $3, unit_currency_label = $4
+     WHERE id = $5`,
+    [
+      JSON.stringify(columns),
+      JSON.stringify(config || {}),
+      unitPcsLabel,
+      unitCurrencyLabel,
+      orderId
+    ]
+  );
+  return res.rowCount > 0;
+}
+
 async function deleteOrder(orderId) {
   const res = await pool.query(
     "DELETE FROM orders WHERE id = $1",
@@ -194,5 +239,7 @@ module.exports = {
   deleteRow,
   listOrders,
   deleteOrder,
-  updateOrderConfig
+  updateOrderConfig,
+  updateOrderSettings,
+  updateOrderWithFullConfig
 };
