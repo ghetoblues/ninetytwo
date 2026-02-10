@@ -15,10 +15,10 @@ function updatePriceFields() {
 }
 
 function updateColorOptionsVisibility() {
-  const colorColumnChecked = !!form.querySelector("input[name=\"columns\"][value=\"color\"]:checked");
+  const colorCheckbox = form.querySelector("input[name=\"columns\"][value=\"color\"]");
   const el = document.getElementById("color-options");
-  if (!el) return;
-  el.style.display = colorColumnChecked ? "block" : "none";
+  if (!el || !colorCheckbox) return;
+  el.style.display = colorCheckbox.checked ? "block" : "none";
 }
 
 async function loadOrders() {
@@ -138,16 +138,12 @@ form.addEventListener("submit", async (e) => {
 loadOrders();
 updatePriceFields();
 form.addEventListener("change", (e) => {
-  if (e.target && e.target.name === "columns") {
+  if (!e.target) return;
+  if (e.target.name === "columns") {
     updatePriceFields();
     updateColorOptionsVisibility();
   }
 });
-// initial visibility
-updateColorOptionsVisibility();
 
-// also show/hide when sport or color options change
-form.addEventListener("input", (e) => {
-  if (!e.target) return;
-  if (e.target.name === "columns") updateColorOptionsVisibility();
-});
+// initial visibility on page load
+setTimeout(updateColorOptionsVisibility, 100);
