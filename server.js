@@ -368,8 +368,8 @@ app.patch("/api/orders/:slug", requireAdmin, async (req, res) => {
   const ok = await updateOrderWithFullConfig(order.id, {
     columns: newColumns,
     config: updatedConfig,
-    unitPcsLabel: unitPcsLabel || order.unitLabels.pcs,
-    unitCurrencyLabel: unitCurrencyLabel || order.unitLabels.currency
+    unitPcsLabel: unitPcsLabel && unitPcsLabel.trim() ? unitPcsLabel : order.unitLabels.pcs,
+    unitCurrencyLabel: unitCurrencyLabel && unitCurrencyLabel.trim() ? unitCurrencyLabel : order.unitLabels.currency
   });
   
   if (!ok) {
