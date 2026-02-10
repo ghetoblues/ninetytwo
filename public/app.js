@@ -32,7 +32,9 @@ const hockeySizeChart = [
   { size: "170/L", height: [166, 175] },
   { size: "180/XL", height: [176, 185] },
   { size: "190/XXL", height: [186, 195] },
-  { size: "190/3XL", height: [196, 999] }
+  { size: "190/3XL", height: [196, 999] },
+  { size: "GOALIE ADULT", height: null },
+  { size: "GOALIE KID", height: null }
 ];
 
 let unitByKey = {};
@@ -77,7 +79,7 @@ function suggestSize(rowData) {
   // if order configured as Hockey, use height-only hockey chart
   if (order && order.config && order.config.sport === "Hockey") {
     if (!hasHeight) return null;
-    const match = hockeySizeChart.find((r) => inRange(height, r.height));
+    const match = hockeySizeChart.find((r) => r.height !== null && inRange(height, r.height));
     if (match) return { size: match.size, mode: "match" };
     return null;
   }
