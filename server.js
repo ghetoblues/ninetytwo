@@ -33,7 +33,8 @@ const translations = {
     SHORTS_SIZE: "SHORTS SIZE",
     SOCKS_SIZE: "SOCKS SIZE",
     TYPE: "TYPE",
-    COLOR: "COLOR",
+    JERSEY_COLOR: "JERSEY COLOR",
+    SOCKS_COLOR: "SOCKS COLOR",
     DESTINATION: "DESTINATION",
     QTY_JERSEY: "QUANTITY JERSEY",
     QTY_SHORTS: "QUANTITY SHORTS",
@@ -52,7 +53,8 @@ const translations = {
     SHORTS_SIZE: "РАЗМЕР ШОРТ",
     SOCKS_SIZE: "РАЗМЕР НОСКОВ",
     TYPE: "ТИП",
-    COLOR: "ЦВЕТ",
+    JERSEY_COLOR: "ЦВЕТ МАЙКИ",
+    SOCKS_COLOR: "ЦВЕТ НОСКОВ",
     DESTINATION: "НАЗНАЧЕНИЕ",
     QTY_JERSEY: "КОЛ-ВО МАЕК",
     QTY_SHORTS: "КОЛ-ВО ШОРТ",
@@ -155,8 +157,14 @@ function baseColumns({ priceJersey, priceShorts, priceSocks, colorOptions, sport
       options: ["Long", "Short"]
     },
     {
-      key: "color",
-      label: getLabel("COLOR", language),
+      key: "jersey_color",
+      label: getLabel("JERSEY_COLOR", language),
+      type: "select",
+      options: colorOpts.map(c => ({ value: c, label: getColorLabel(c, language) }))
+    },
+    {
+      key: "socks_color",
+      label: getLabel("SOCKS_COLOR", language),
       type: "select",
       options: colorOpts.map(c => ({ value: c, label: getColorLabel(c, language) }))
     },

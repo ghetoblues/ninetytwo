@@ -104,7 +104,7 @@ function updatePriceFields() {
 }
 
 function updateColorOptionsVisibility() {
-  const colorCheckbox = form.querySelector("input[name=\"columns\"][value=\"color\"]");
+  const colorCheckbox = form.querySelector("input[name=\"columns\"][value=\"jersey_color\"]");
   const el = document.getElementById("color-options");
   if (!el || !colorCheckbox) return;
   el.style.display = colorCheckbox.checked ? "block" : "none";
@@ -240,7 +240,7 @@ const editResultEl = document.getElementById("edit-result");
 const editSection = document.getElementById("edit-section");
 
 function updateEditColorOptionsVisibility() {
-  const colorCheckbox = editForm.querySelector("input[name=\"columns\"][value=\"color\"]");
+  const colorCheckbox = editForm.querySelector("input[name=\"columns\"][value=\"jersey_color\"]");
   const el = document.getElementById("edit-color-options");
   if (!el || !colorCheckbox) return;
   el.style.display = colorCheckbox.checked ? "block" : "none";
