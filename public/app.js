@@ -253,7 +253,8 @@ function getPdfMeta() {
   const timeLabel = now.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" });
   const currencyLabel = (order.unitLabels && order.unitLabels.currency) || "EUR";
   const totalPrice = sumTotalPrice();
-  return { dateLabel, timeLabel, currencyLabel, totalPrice };
+  const sportLabel = order.config?.sport || "Football";
+  return { dateLabel, timeLabel, currencyLabel, totalPrice, sportLabel };
 }
 
 function getPdfStyles() {
@@ -347,10 +348,13 @@ function getPdfStyles() {
         background: #fafbf8;
       }
       .index {
-        width: 28px;
+        width: 20px;
         text-align: center;
         font-weight: 600;
         background: #f4f6f2;
+      }
+      td:nth-child(2) {
+        text-align: center;
       }
       .total-row td {
         font-weight: 700;
@@ -372,7 +376,7 @@ function getPdfStyles() {
 }
 
 function getPdfBodyHtml() {
-  const { dateLabel, timeLabel, currencyLabel, totalPrice } = getPdfMeta();
+  const { dateLabel, timeLabel, currencyLabel, totalPrice, sportLabel } = getPdfMeta();
   const pdfColumns = getPdfColumns();
 
   const columnHeaders = pdfColumns.map((col) => {
@@ -380,6 +384,13 @@ function getPdfBodyHtml() {
     const label = unit ? `${col.label} (${unit})` : col.label;
     return `<th>${escapeHtml(label)}</th>`;
   });
+
+  const totalQuantity = rows.reduce((sum, row) => {
+    const qtyJersey = Number(row.data?.qty_jersey || 0);
+    const qtyShorts = Number(row.data?.qty_shorts || 0);
+    const qtySocks = Number(row.data?.qty_socks || 0);
+    return sum + qtyJersey + qtyShorts + qtySocks;
+  }, 0);
 
   const bodyRows = rows
     .filter((row) => !isRowZeroQuantity(row.data || {}))
@@ -409,8 +420,13 @@ function getPdfBodyHtml() {
   const summaryCards = [];
   summaryCards.push(`
         <div class="summary-card">
-          <span>Total rows</span>
-          <strong>${escapeHtml(rows.length)}</strong>
+          <span>Type</span>
+          <strong>${escapeHtml(sportLabel)}</strong>
+        </div>`);
+  summaryCards.push(`
+        <div class="summary-card">
+          <span>Total quantity</span>
+          <strong>${escapeHtml(totalQuantity)}</strong>
         </div>`);
   if (pdfMode !== "factory") {
     summaryCards.push(`
@@ -419,17 +435,13 @@ function getPdfBodyHtml() {
           <strong>${escapeHtml(formatMoney(totalPrice))} ${escapeHtml(currencyLabel)}</strong>
         </div>`);
   } else {
+    const colorCount = (order.config?.colorOptions && order.config.colorOptions.length) || 0;
     summaryCards.push(`
         <div class="summary-card">
-          <span>Prices</span>
-          <strong>Hidden</strong>
+          <span>Colors</span>
+          <strong>${escapeHtml(colorCount)}</strong>
         </div>`);
   }
-  summaryCards.push(`
-        <div class="summary-card">
-          <span>Units</span>
-          <strong>${escapeHtml(currencyLabel)}</strong>
-        </div>`);
 
   return `
       <div class="header">
@@ -445,7 +457,7 @@ function getPdfBodyHtml() {
       </div>
       <table>
         <thead>
-          <tr><th>#</th>${columnHeaders.join("")}</tr>
+          <tr><th>ROW</th>${columnHeaders.join("")}</tr>
         </thead>
         <tbody>
           ${bodyRows}
