@@ -30,52 +30,66 @@ function addCustomColorCheckbox(containerId, colorName, autoCheck = false) {
 }
 
 // Handle adding custom colors in create form
-document.getElementById("color-options").querySelector(".btn-add-color").addEventListener("click", (e) => {
-  e.preventDefault();
-  const input = document.getElementById("custom-color-input");
-  const colorName = input.value.trim();
-  
-  if (!colorName) {
-    alert("Please enter a color name");
-    return;
-  }
-  
-  addCustomColorCheckbox("color-options-container", colorName, true);
-  input.value = "";
-  input.focus();
-});
+const createColorBtn = document.getElementById("color-options")?.querySelector(".btn-add-color");
+if (createColorBtn) {
+  createColorBtn.addEventListener("click", (e) => {
+    e.preventDefault();
+    const input = document.getElementById("custom-color-input");
+    const colorName = input.value.trim();
+    
+    if (!colorName) {
+      alert("Please enter a color name");
+      return;
+    }
+    
+    addCustomColorCheckbox("color-options-container", colorName, true);
+    input.value = "";
+    input.focus();
+  });
+}
 
 // Handle Enter key in custom color input (create form)
-document.getElementById("custom-color-input").addEventListener("keypress", (e) => {
-  if (e.key === "Enter") {
-    e.preventDefault();
-    document.querySelector(".btn-add-color").click();
-  }
-});
+const createColorInput = document.getElementById("custom-color-input");
+if (createColorInput) {
+  createColorInput.addEventListener("keypress", (e) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      const btn = document.getElementById("color-options")?.querySelector(".btn-add-color");
+      if (btn) btn.click();
+    }
+  });
+}
 
 // Handle adding custom colors in edit form
-document.getElementById("edit-btn-add-color").addEventListener("click", (e) => {
-  e.preventDefault();
-  const input = document.getElementById("edit-custom-color-input");
-  const colorName = input.value.trim();
-  
-  if (!colorName) {
-    alert("Please enter a color name");
-    return;
-  }
-  
-  addCustomColorCheckbox("edit-color-options-container", colorName, true);
-  input.value = "";
-  input.focus();
-});
+const editColorBtn = document.getElementById("edit-btn-add-color");
+if (editColorBtn) {
+  editColorBtn.addEventListener("click", (e) => {
+    e.preventDefault();
+    const input = document.getElementById("edit-custom-color-input");
+    const colorName = input.value.trim();
+    
+    if (!colorName) {
+      alert("Please enter a color name");
+      return;
+    }
+    
+    addCustomColorCheckbox("edit-color-options-container", colorName, true);
+    input.value = "";
+    input.focus();
+  });
+}
 
 // Handle Enter key in custom color input (edit form)
-document.getElementById("edit-custom-color-input").addEventListener("keypress", (e) => {
-  if (e.key === "Enter") {
-    e.preventDefault();
-    document.getElementById("edit-btn-add-color").click();
-  }
-});
+const editColorInput = document.getElementById("edit-custom-color-input");
+if (editColorInput) {
+  editColorInput.addEventListener("keypress", (e) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      const btn = document.getElementById("edit-btn-add-color");
+      if (btn) btn.click();
+    }
+  });
+}
 
 function updatePriceFields() {
   const checked = new Set(
