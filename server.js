@@ -337,6 +337,19 @@ app.patch("/api/orders/:slug", requireAdmin, async (req, res) => {
     });
   }
   
+  // If colorOptions changed, update the color column options
+  if (colorOptions !== undefined && colorOptions.length > 0) {
+    newColumns = newColumns.map((col) => {
+      if (col.key === "color") {
+        return {
+          ...col,
+          options: colorOptions.map(c => ({ value: c, label: getColorLabel(c, order.config?.language || "ENG") }))
+        };
+      }
+      return col;
+    });
+  }
+  
   const ok = await updateOrderWithFullConfig(order.id, {
     columns: newColumns,
     config: updatedConfig,

@@ -30,7 +30,7 @@ function addCustomColorCheckbox(containerId, colorName, autoCheck = false) {
 }
 
 // Handle adding custom colors in create form
-document.querySelector(".btn-add-color").addEventListener("click", (e) => {
+document.getElementById("color-options").querySelector(".btn-add-color").addEventListener("click", (e) => {
   e.preventDefault();
   const input = document.getElementById("custom-color-input");
   const colorName = input.value.trim();
