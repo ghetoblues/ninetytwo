@@ -3,7 +3,7 @@ const resultEl = document.getElementById("create-result");
 const ordersList = document.getElementById("orders-list");
 
 // Function to add custom color checkbox
-function addCustomColorCheckbox(containerId, colorName) {
+function addCustomColorCheckbox(containerId, colorName, autoCheck = false) {
   const container = document.getElementById(containerId);
   if (!container) return;
   
@@ -21,6 +21,7 @@ function addCustomColorCheckbox(containerId, colorName) {
   input.type = "checkbox";
   input.name = "colorOptions";
   input.value = colorName;
+  input.checked = autoCheck;
   
   label.appendChild(input);
   label.appendChild(document.createTextNode(" " + colorName));
@@ -39,7 +40,7 @@ document.querySelector(".btn-add-color").addEventListener("click", (e) => {
     return;
   }
   
-  addCustomColorCheckbox("color-options-container", colorName);
+  addCustomColorCheckbox("color-options-container", colorName, true);
   input.value = "";
   input.focus();
 });
@@ -63,7 +64,7 @@ document.getElementById("edit-btn-add-color").addEventListener("click", (e) => {
     return;
   }
   
-  addCustomColorCheckbox("edit-color-options-container", colorName);
+  addCustomColorCheckbox("edit-color-options-container", colorName, true);
   input.value = "";
   input.focus();
 });
@@ -278,12 +279,7 @@ async function openEditOrder(slug) {
   // Add custom colors from this order
   colorOptions.forEach(color => {
     if (!defaultColors.includes(color)) {
-      addCustomColorCheckbox("edit-color-options-container", color);
-      // Check the custom color since it was in colorOptions
-      const customCheckbox = container.querySelector(`input[value="${color}"]`);
-      if (customCheckbox) {
-        customCheckbox.checked = true;
-      }
+      addCustomColorCheckbox("edit-color-options-container", color, true);
     }
   });
   
