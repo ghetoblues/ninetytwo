@@ -350,11 +350,11 @@ function getPdfStyles() {
       .index {
         width: 20px;
         text-align: center;
-        font-weight: 600;
         background: #f4f6f2;
       }
       td:nth-child(2) {
         text-align: center;
+        font-weight: 600;
       }
       .total-row td {
         font-weight: 700;
