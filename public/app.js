@@ -959,6 +959,7 @@ async function loadOrder() {
   order = await res.json();
   rows = order.rows.map((row) => ({ id: row.id, data: row.data || {} }));
   orderTitleEl.textContent = order.title;
+  document.title = `${order.title} - NinetyTwo`;
   const pcsLabel = (order.unitLabels && order.unitLabels.pcs) || "pcs";
   const currencyLabel = (order.unitLabels && order.unitLabels.currency) || "EUR";
   unitByKey = {
