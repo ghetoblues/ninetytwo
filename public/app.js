@@ -457,7 +457,7 @@ function getPdfBodyHtml() {
       </div>
       <table>
         <thead>
-          <tr><th>ROW</th>${columnHeaders.join("")}</tr>
+          <tr><th>#</th>${columnHeaders.join("")}</tr>
         </thead>
         <tbody>
           ${bodyRows}

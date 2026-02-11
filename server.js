@@ -26,7 +26,7 @@ app.use(express.static(path.join(__dirname, "public"), { index: false }));
 const translations = {
   ENG: {
     SURNAME: "SURNAME",
-    NUMBER: "NUMBER",
+    NUMBER: "PLAYER NUMBER",
     HEIGHT: "HEIGHT",
     WEIGHT: "WEIGHT",
     JERSEY_SIZE: "JERSEY SIZE",
@@ -45,7 +45,7 @@ const translations = {
   },
   RUS: {
     SURNAME: "ФАМИЛИЯ",
-    NUMBER: "НОМЕР",
+    NUMBER: "НОМЕР ИГРОКА",
     HEIGHT: "РОСТ",
     WEIGHT: "ВЕС",
     JERSEY_SIZE: "РАЗМЕР МАЙКИ",
