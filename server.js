@@ -116,8 +116,10 @@ function baseColumns({ priceJersey, priceShorts, priceSocks, colorOptions, sport
       "180/XL",
       "190/XXL",
       "190/3XL",
-      "GOALIE ADULT",
-      "GOALIE KID"
+      "GOALIE S",
+      "GOALIE M",
+      "GOALIE L",
+      "GOALIE 3XL"
     ];
   }
 
