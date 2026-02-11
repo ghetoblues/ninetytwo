@@ -1,3 +1,163 @@
+// Product definitions
+const PRODUCT_CONFIG = {
+  Hockey: {
+    "Hockey Jerseys": {
+      label: "Hockey Jerseys",
+      fields: [
+        { name: "name", label: "SURNAME", type: "checkbox" },
+        { name: "number", label: "PLAYER NUMBER", type: "checkbox" },
+        { name: "height_cm", label: "HEIGHT", type: "checkbox" },
+        { name: "weight_kg", label: "WEIGHT", type: "checkbox" },
+        { name: "size", label: "JERSEYS SIZE (Hockey Grid)", type: "checkbox" },
+        { name: "jersey_color", label: "JERSEY COLOR", type: "checkbox" },
+        { name: "qty_jersey", label: "JERSEY QUANTITY", type: "checkbox" },
+        { name: "price_jersey", label: "JERSEY PRICE", type: "checkbox" }
+      ]
+    },
+    "Hockey Shorts": {
+      label: "Hockey Shorts",
+      fields: [
+        { name: "size_shorts", label: "SHORTS SIZE (Hockey Grid)", type: "checkbox" },
+        { name: "jersey_color", label: "SHORTS COLOR (matches Jersey colors)", type: "checkbox" },
+        { name: "qty_shorts", label: "SHORTS QUANTITY", type: "checkbox" },
+        { name: "price_shorts", label: "SHORTS PRICE", type: "checkbox" }
+      ]
+    },
+    "Hockey Socks": {
+      label: "Hockey Socks",
+      fields: [
+        { name: "size_socks", label: "SOCKS SIZE", type: "checkbox" },
+        { name: "jersey_color", label: "SOCKS COLOR (matches Jersey colors)", type: "checkbox" },
+        { name: "qty_socks", label: "SOCKS QUANTITY", type: "checkbox" },
+        { name: "price_socks", label: "SOCKS PRICE", type: "checkbox" }
+      ]
+    }
+  },
+  Football: {
+    "Football Jerseys": {
+      label: "Football Jerseys",
+      fields: [
+        { name: "name", label: "SURNAME", type: "checkbox" },
+        { name: "number", label: "PLAYER NUMBER", type: "checkbox" },
+        { name: "height_cm", label: "HEIGHT", type: "checkbox" },
+        { name: "weight_kg", label: "WEIGHT", type: "checkbox" },
+        { name: "size", label: "JERSEYS SIZE (Football Grid)", type: "checkbox" },
+        { name: "jersey_color", label: "JERSEY COLOR", type: "checkbox" },
+        { name: "qty_jersey", label: "JERSEY QUANTITY", type: "checkbox" },
+        { name: "price_jersey", label: "JERSEY PRICE", type: "checkbox" }
+      ]
+    },
+    "Football Shorts": {
+      label: "Football Shorts",
+      fields: [
+        { name: "size_shorts", label: "SHORTS SIZE (Football Grid)", type: "checkbox" },
+        { name: "jersey_color", label: "SHORTS COLOR (matches Jersey colors)", type: "checkbox" },
+        { name: "qty_shorts", label: "SHORTS QUANTITY", type: "checkbox" },
+        { name: "price_shorts", label: "SHORTS PRICE", type: "checkbox" }
+      ]
+    }
+  },
+  Other: {
+    "Caps": {
+      label: "Caps",
+      fields: [
+        { name: "cap_style", label: "STYLE (6 panel cap, trucker cap with mesh)", type: "checkbox" },
+        { name: "cap_logo", label: "LOGO (Embroidery 3D)", type: "checkbox" },
+        { name: "cap_visor", label: "VISOR (Curved)", type: "checkbox" },
+        { name: "cap_fastener", label: "FASTENER (Plastic snap closure)", type: "checkbox" },
+        { name: "cap_size", label: "CAP SIZE (Adult / Kids)", type: "checkbox" }
+      ]
+    }
+  }
+};
+
+// Tab Navigation
+const tabButtons = document.querySelectorAll(".tab-button");
+const tabContents = document.querySelectorAll(".tab-content");
+
+tabButtons.forEach(button => {
+  button.addEventListener("click", () => {
+    const tabName = button.dataset.tab;
+    
+    // Remove active class from all buttons and contents
+    tabButtons.forEach(btn => btn.classList.remove("active"));
+    tabContents.forEach(content => content.classList.remove("active"));
+    
+    // Add active class to clicked button and corresponding content
+    button.classList.add("active");
+    document.getElementById(tabName).classList.add("active");
+  });
+});
+
+// Sport and Product Selection
+const sportSelect = document.getElementById("sport-select");
+const productsContainer = document.getElementById("products-container");
+const optionsContainer = document.getElementById("options-container");
+
+function renderProductCheckboxes() {
+  const sport = sportSelect.value;
+  const products = PRODUCT_CONFIG[sport] || {};
+  
+  productsContainer.innerHTML = "";
+  
+  Object.keys(products).forEach(productKey => {
+    const product = products[productKey];
+    const checkbox = document.createElement("div");
+    checkbox.className = "product-checkbox";
+    checkbox.innerHTML = `
+      <input type="checkbox" name="selected-products" value="${productKey}" id="product-${productKey.replace(/\s+/g, "-").toLowerCase()}" />
+      <label for="product-${productKey.replace(/\s+/g, "-").toLowerCase()}">${product.label}</label>
+    `;
+    
+    checkbox.querySelector("input").addEventListener("change", () => {
+      checkbox.classList.toggle("checked");
+      renderProductOptions();
+    });
+    
+    productsContainer.appendChild(checkbox);
+  });
+}
+
+function renderProductOptions() {
+  const sport = sportSelect.value;
+  const selectedProducts = Array.from(document.querySelectorAll("input[name='selected-products']:checked")).map(el => el.value);
+  
+  optionsContainer.innerHTML = "";
+  
+  selectedProducts.forEach(productKey => {
+    const product = PRODUCT_CONFIG[sport][productKey];
+    if (!product) return;
+    
+    const section = document.createElement("div");
+    section.className = "product-options active";
+    section.innerHTML = `<h4>${product.label}</h4><div class="options-grid"></div>`;
+    
+    const grid = section.querySelector(".options-grid");
+    
+    product.fields.forEach(field => {
+      const group = document.createElement("div");
+      group.className = "form-group";
+      group.innerHTML = `
+        <label>
+          <input type="checkbox" name="columns" value="${field.name}" />
+          ${field.label}
+        </label>
+      `;
+      grid.appendChild(group);
+    });
+    
+    optionsContainer.appendChild(section);
+  });
+}
+
+sportSelect.addEventListener("change", () => {
+  renderProductCheckboxes();
+  renderProductOptions();
+});
+
+// Initialize on page load
+renderProductCheckboxes();
+
 const form = document.getElementById("create-form");
 const resultEl = document.getElementById("create-result");
 const ordersList = document.getElementById("orders-list");
@@ -30,7 +190,7 @@ function addCustomColorCheckbox(containerId, colorName, autoCheck = false) {
 }
 
 // Handle adding custom colors in create form
-const createColorBtn = document.getElementById("color-options")?.querySelector(".btn-add-color");
+const createColorBtn = document.querySelector(".custom-color-input .btn-add-color");
 if (createColorBtn) {
   createColorBtn.addEventListener("click", (e) => {
     e.preventDefault();
@@ -54,8 +214,7 @@ if (createColorInput) {
   createColorInput.addEventListener("keypress", (e) => {
     if (e.key === "Enter") {
       e.preventDefault();
-      const btn = document.getElementById("color-options")?.querySelector(".btn-add-color");
-      if (btn) btn.click();
+      createColorBtn?.click();
     }
   });
 }
@@ -85,29 +244,9 @@ if (editColorInput) {
   editColorInput.addEventListener("keypress", (e) => {
     if (e.key === "Enter") {
       e.preventDefault();
-      const btn = document.getElementById("edit-btn-add-color");
-      if (btn) btn.click();
+      editColorBtn?.click();
     }
   });
-}
-
-function updatePriceFields() {
-  const checked = new Set(
-    Array.from(form.querySelectorAll("input[name=\"columns\"]:checked")).map((el) => el.value)
-  );
-  const priceInputs = form.querySelectorAll("[data-price-field]");
-  priceInputs.forEach((input) => {
-    const label = input.closest("label");
-    if (!label) return;
-    label.style.display = checked.has(input.dataset.priceField) ? "grid" : "none";
-  });
-}
-
-function updateColorOptionsVisibility() {
-  const colorCheckbox = form.querySelector("input[name=\"columns\"][value=\"jersey_color\"]");
-  const el = document.getElementById("color-options");
-  if (!el || !colorCheckbox) return;
-  el.style.display = colorCheckbox.checked ? "block" : "none";
 }
 
 async function loadOrders() {
@@ -201,11 +340,9 @@ form.addEventListener("submit", async (e) => {
   payload.priceShorts = Number(payload.priceShorts || 7.7);
   payload.priceSocks = Number(payload.priceSocks || 0);
 
-  // sport is included in formData, but colorOptions can be multiple values
   const colors = Array.from(form.querySelectorAll("input[name=\"colorOptions\"]:checked")).map((el) => el.value);
   payload.colorOptions = colors;
   
-  // language is in formData, also ensure sport is present
   payload.language = payload.language || "ENG";
   payload.sport = payload.sport || "Football";
   if (columns.length === 0) {
@@ -244,18 +381,6 @@ function updateEditColorOptionsVisibility() {
   const el = document.getElementById("edit-color-options");
   if (!el || !colorCheckbox) return;
   el.style.display = colorCheckbox.checked ? "block" : "none";
-}
-
-function updateEditPriceFields() {
-  const checked = new Set(
-    Array.from(editForm.querySelectorAll("input[name=\"columns\"]:checked")).map((el) => el.value)
-  );
-  const priceInputs = editForm.querySelectorAll("[data-price-field]");
-  priceInputs.forEach((input) => {
-    const label = input.closest("label");
-    if (!label) return;
-    label.style.display = checked.has(input.dataset.priceField) ? "grid" : "none";
-  });
 }
 
 async function openEditOrder(slug) {
@@ -297,7 +422,7 @@ async function openEditOrder(slug) {
     }
   });
   
-  // Load prices - need to calculate them from columns
+  // Load prices
   const priceJerseyCol = order.columns.find(col => col.key === "price_jersey");
   const priceShortsCol = order.columns.find(col => col.key === "price_shorts");
   const priceSocksCol = order.columns.find(col => col.key === "price_socks");
@@ -315,7 +440,6 @@ async function openEditOrder(slug) {
   // Show edit section
   editSection.style.display = "block";
   updateEditColorOptionsVisibility();
-  updateEditPriceFields();
   
   // Scroll to edit section
   editSection.scrollIntoView({ behavior: "smooth" });
@@ -337,7 +461,6 @@ editForm.addEventListener("submit", async (e) => {
     return;
   }
   
-  const formData = new FormData(editForm);
   const columns = Array.from(editForm.querySelectorAll("input[name=\"columns\"]:checked")).map(el => el.value);
   const colors = Array.from(editForm.querySelectorAll("input[name=\"colorOptions\"]:checked")).map(el => el.value);
   
@@ -377,21 +500,9 @@ editForm.addEventListener("change", (e) => {
   if (!e.target) return;
   if (e.target.name === "columns") {
     updateEditColorOptionsVisibility();
-    updateEditPriceFields();
   }
 });
 
 document.getElementById("cancel-edit").addEventListener("click", closeEditOrder);
 
 loadOrders();
-updatePriceFields();
-form.addEventListener("change", (e) => {
-  if (!e.target) return;
-  if (e.target.name === "columns") {
-    updatePriceFields();
-    updateColorOptionsVisibility();
-  }
-});
-
-// initial visibility on page load
-setTimeout(updateColorOptionsVisibility, 100);
