@@ -71,8 +71,6 @@ const PRODUCT_CONFIG = {
   }
 };
 
-// Tab Navigation
-tabButtons.forEach(button => {
 document.querySelector('.tabs-container').addEventListener('click', function(e) {
   const btn = e.target.closest('.tab-button');
   if (!btn) return;
