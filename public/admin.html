@@ -83,16 +83,22 @@
 
           <fieldset class="columns-fieldset" id="color-options" style="display:none;">
             <legend>Available Colors</legend>
-            <label><input type="checkbox" name="colorOptions" value="Red" /> Red</label>
-            <label><input type="checkbox" name="colorOptions" value="Blue" /> Blue</label>
-            <label><input type="checkbox" name="colorOptions" value="White" /> White</label>
-            <label><input type="checkbox" name="colorOptions" value="Yellow" /> Yellow</label>
-            <label><input type="checkbox" name="colorOptions" value="Black" /> Black</label>
-            <label><input type="checkbox" name="colorOptions" value="Green" /> Green</label>
-            <label><input type="checkbox" name="colorOptions" value="Orange" /> Orange</label>
-            <label><input type="checkbox" name="colorOptions" value="Purple" /> Purple</label>
-            <label><input type="checkbox" name="colorOptions" value="Pink" /> Pink</label>
-            <label><input type="checkbox" name="colorOptions" value="Gray" /> Gray</label>
+            <div id="color-options-container">
+              <label><input type="checkbox" name="colorOptions" value="Red" /> Red</label>
+              <label><input type="checkbox" name="colorOptions" value="Blue" /> Blue</label>
+              <label><input type="checkbox" name="colorOptions" value="White" /> White</label>
+              <label><input type="checkbox" name="colorOptions" value="Yellow" /> Yellow</label>
+              <label><input type="checkbox" name="colorOptions" value="Black" /> Black</label>
+              <label><input type="checkbox" name="colorOptions" value="Green" /> Green</label>
+              <label><input type="checkbox" name="colorOptions" value="Orange" /> Orange</label>
+              <label><input type="checkbox" name="colorOptions" value="Purple" /> Purple</label>
+              <label><input type="checkbox" name="colorOptions" value="Pink" /> Pink</label>
+              <label><input type="checkbox" name="colorOptions" value="Gray" /> Gray</label>
+            </div>
+            <div class="custom-color-input">
+              <input type="text" id="custom-color-input" placeholder="Add custom color" />
+              <button type="button" class="btn-add-color">+</button>
+            </div>
           </fieldset>
           <label>
             Rows count
@@ -141,16 +147,22 @@
           </fieldset>
           <fieldset class="columns-fieldset" id="edit-color-options" style="display:none;">
             <legend>Available Colors</legend>
-            <label><input type="checkbox" name="colorOptions" value="Red" /> Red</label>
-            <label><input type="checkbox" name="colorOptions" value="Blue" /> Blue</label>
-            <label><input type="checkbox" name="colorOptions" value="White" /> White</label>
-            <label><input type="checkbox" name="colorOptions" value="Yellow" /> Yellow</label>
-            <label><input type="checkbox" name="colorOptions" value="Black" /> Black</label>
-            <label><input type="checkbox" name="colorOptions" value="Green" /> Green</label>
-            <label><input type="checkbox" name="colorOptions" value="Orange" /> Orange</label>
-            <label><input type="checkbox" name="colorOptions" value="Purple" /> Purple</label>
-            <label><input type="checkbox" name="colorOptions" value="Pink" /> Pink</label>
-            <label><input type="checkbox" name="colorOptions" value="Gray" /> Gray</label>
+            <div id="edit-color-options-container">
+              <label><input type="checkbox" name="colorOptions" value="Red" /> Red</label>
+              <label><input type="checkbox" name="colorOptions" value="Blue" /> Blue</label>
+              <label><input type="checkbox" name="colorOptions" value="White" /> White</label>
+              <label><input type="checkbox" name="colorOptions" value="Yellow" /> Yellow</label>
+              <label><input type="checkbox" name="colorOptions" value="Black" /> Black</label>
+              <label><input type="checkbox" name="colorOptions" value="Green" /> Green</label>
+              <label><input type="checkbox" name="colorOptions" value="Orange" /> Orange</label>
+              <label><input type="checkbox" name="colorOptions" value="Purple" /> Purple</label>
+              <label><input type="checkbox" name="colorOptions" value="Pink" /> Pink</label>
+              <label><input type="checkbox" name="colorOptions" value="Gray" /> Gray</label>
+            </div>
+            <div class="custom-color-input">
+              <input type="text" id="edit-custom-color-input" placeholder="Add custom color" />
+              <button type="button" class="btn-add-color" id="edit-btn-add-color">+</button>
+            </div>
           </fieldset>
           <fieldset class="columns-fieldset">
             <legend>Units</legend>

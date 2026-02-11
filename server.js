@@ -275,34 +275,6 @@ app.post("/api/orders", requireAdmin, async (req, res) => {
   }
 });
 
-app.patch("/api/orders/:slug", requireAdmin, async (req, res) => {
-  const order = await getOrderBySlug(req.params.slug);
-  if (!order) {
-    res.status(404).json({ error: "Order not found" });
-    return;
-  }
-  
-  const { columnsKeys = [], colorOptions = [], priceJersey, priceShorts, priceSocks } = req.body || {};
-  
-  // Build new columns
-  const newColumns = buildOrderColumns({
-    priceJersey: typeof priceJersey === 'number' ? priceJersey : (order.columns.find(c => c.key === 'price_jersey')?.default || 21.9),
-    priceShorts: typeof priceShorts === 'number' ? priceShorts : (order.columns.find(c => c.key === 'price_shorts')?.default || 7.7),
-    priceSocks: typeof priceSocks === 'number' ? priceSocks : (order.columns.find(c => c.key === 'price_socks')?.default || 0),
-    columnsKeys,
-    colorOptions,
-    sport: order.config?.sport || "Football",
-    language: order.config?.language || "ENG"
-  });
-  
-  try {
-    await updateOrderConfig(order.id, newColumns, colorOptions);
-    res.json({ ok: true });
-  } catch (err) {
-    res.status(400).json({ error: err.message });
-  }
-});
-
 app.delete("/api/orders/:slug", requireAdmin, async (req, res) => {
   const order = await getOrderBySlug(req.params.slug);
   if (!order) {
@@ -368,8 +340,8 @@ app.patch("/api/orders/:slug", requireAdmin, async (req, res) => {
   const ok = await updateOrderWithFullConfig(order.id, {
     columns: newColumns,
     config: updatedConfig,
-    unitPcsLabel: unitPcsLabel && unitPcsLabel.trim() ? unitPcsLabel : order.unitLabels.pcs,
-    unitCurrencyLabel: unitCurrencyLabel && unitCurrencyLabel.trim() ? unitCurrencyLabel : order.unitLabels.currency
+    unitPcsLabel: (unitPcsLabel && String(unitPcsLabel).trim()) || order.unitLabels.pcs,
+    unitCurrencyLabel: (unitCurrencyLabel && String(unitCurrencyLabel).trim()) || order.unitLabels.currency
   });
   
   if (!ok) {

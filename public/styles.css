@@ -571,3 +571,34 @@ body.home .page {
     display: grid;
   }
 }
+
+.custom-color-input {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 8px;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+}
+
+.custom-color-input input {
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--line);
+  font-size: 12px;
+}
+
+.btn-add-color {
+  background: var(--accent);
+  color: #1d1d1d;
+  border: none;
+  padding: 10px 12px;
+  border-radius: 10px;
+  font-weight: 600;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.btn-add-color:active {
+  transform: translateY(1px);
+}

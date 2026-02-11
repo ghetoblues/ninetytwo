@@ -2,6 +2,80 @@ const form = document.getElementById("create-form");
 const resultEl = document.getElementById("create-result");
 const ordersList = document.getElementById("orders-list");
 
+// Function to add custom color checkbox
+function addCustomColorCheckbox(containerId, colorName) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+  
+  // Check if already exists
+  const existing = Array.from(container.querySelectorAll("label")).find(
+    label => label.textContent.trim().toLowerCase() === colorName.toLowerCase()
+  );
+  if (existing) {
+    alert(`Color "${colorName}" already exists`);
+    return;
+  }
+  
+  const label = document.createElement("label");
+  const input = document.createElement("input");
+  input.type = "checkbox";
+  input.name = "colorOptions";
+  input.value = colorName;
+  
+  label.appendChild(input);
+  label.appendChild(document.createTextNode(" " + colorName));
+  
+  container.appendChild(label);
+}
+
+// Handle adding custom colors in create form
+document.querySelector(".btn-add-color").addEventListener("click", (e) => {
+  e.preventDefault();
+  const input = document.getElementById("custom-color-input");
+  const colorName = input.value.trim();
+  
+  if (!colorName) {
+    alert("Please enter a color name");
+    return;
+  }
+  
+  addCustomColorCheckbox("color-options-container", colorName);
+  input.value = "";
+  input.focus();
+});
+
+// Handle Enter key in custom color input (create form)
+document.getElementById("custom-color-input").addEventListener("keypress", (e) => {
+  if (e.key === "Enter") {
+    e.preventDefault();
+    document.querySelector(".btn-add-color").click();
+  }
+});
+
+// Handle adding custom colors in edit form
+document.getElementById("edit-btn-add-color").addEventListener("click", (e) => {
+  e.preventDefault();
+  const input = document.getElementById("edit-custom-color-input");
+  const colorName = input.value.trim();
+  
+  if (!colorName) {
+    alert("Please enter a color name");
+    return;
+  }
+  
+  addCustomColorCheckbox("edit-color-options-container", colorName);
+  input.value = "";
+  input.focus();
+});
+
+// Handle Enter key in custom color input (edit form)
+document.getElementById("edit-custom-color-input").addEventListener("keypress", (e) => {
+  if (e.key === "Enter") {
+    e.preventDefault();
+    document.getElementById("edit-btn-add-color").click();
+  }
+});
+
 function updatePriceFields() {
   const checked = new Set(
     Array.from(form.querySelectorAll("input[name=\"columns\"]:checked")).map((el) => el.value)
@@ -186,10 +260,31 @@ async function openEditOrder(slug) {
     checkbox.checked = columnKeys.has(checkbox.value);
   });
   
+  // Clear custom colors from previous order
+  const container = document.getElementById("edit-color-options-container");
+  const defaultColors = ["Red", "Blue", "White", "Yellow", "Black", "Green", "Orange", "Purple", "Pink", "Gray"];
+  const customLabels = Array.from(container.querySelectorAll("label")).filter(label => {
+    const text = label.textContent.trim();
+    return !defaultColors.includes(text);
+  });
+  customLabels.forEach(label => label.remove());
+  
   // Load color options from config
   const colorOptions = order.config?.colorOptions || [];
   editForm.querySelectorAll("input[name=\"colorOptions\"]").forEach(checkbox => {
     checkbox.checked = colorOptions.includes(checkbox.value);
+  });
+  
+  // Add custom colors from this order
+  colorOptions.forEach(color => {
+    if (!defaultColors.includes(color)) {
+      addCustomColorCheckbox("edit-color-options-container", color);
+      // Check the custom color since it was in colorOptions
+      const customCheckbox = container.querySelector(`input[value="${color}"]`);
+      if (customCheckbox) {
+        customCheckbox.checked = true;
+      }
+    }
   });
   
   // Load prices - need to calculate them from columns
