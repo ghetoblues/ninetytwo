@@ -71,6 +71,15 @@ const PRODUCT_CONFIG = {
   }
 };
 
+// Add TOTAL PRICE checkbox to all product types if missing
+Object.keys(PRODUCT_CONFIG).forEach(sport => {
+  Object.keys(PRODUCT_CONFIG[sport]).forEach(productKey => {
+    const product = PRODUCT_CONFIG[sport][productKey];
+    if (!product.fields.some(f => f.name === 'total_price')) {
+      product.fields.push({ name: 'total_price', label: 'TOTAL PRICE', type: 'checkbox' });
+    }
+  });
+});
 document.querySelector('.tabs-container').addEventListener('click', function(e) {
   const btn = e.target.closest('.tab-button');
   if (!btn) return;
