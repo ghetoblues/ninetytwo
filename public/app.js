@@ -388,6 +388,10 @@ function getPdfStyles() {
         font-weight: 700;
         background: #f4f8f2;
       }
+      .total-word {
+        letter-spacing: 0.28em;
+        white-space: nowrap;
+      }
       .note {
         margin-top: 16px;
         font-size: 10px;
@@ -492,7 +496,7 @@ function getPdfBodyHtml() {
           ${bodyRows}
         </tbody>
         <tfoot>
-          <tr class="total-row"><td>TOTAL</td>${footerCells}</tr>
+          <tr class="total-row"><td class="total-word">TOTAL</td>${footerCells}</tr>
         </tfoot>
       </table>
       <div class="note">Values reflect current order data</div>
@@ -784,6 +788,7 @@ function renderTable() {
   const totalRow = document.createElement("tr");
   totalRow.className = "footer-row";
   const totalLabel = document.createElement("td");
+  totalLabel.className = "total-word";
   totalLabel.textContent = "TOTAL";
   totalRow.appendChild(totalLabel);
 

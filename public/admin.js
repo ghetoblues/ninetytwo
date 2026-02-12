@@ -565,6 +565,24 @@ async function loadOrders() {
     factoryBtn.target = "_blank";
     actions.appendChild(factoryBtn);
 
+    const deleteBtn = document.createElement("button");
+    deleteBtn.type = "button";
+    deleteBtn.className = "mini-btn mini-btn-danger";
+    deleteBtn.textContent = "Delete";
+    deleteBtn.addEventListener("click", async () => {
+      const shouldDelete = window.confirm(`Delete order "${order.title}" (${order.slug})?`);
+      if (!shouldDelete) return;
+      const delRes = await fetch(`/api/orders/${order.slug}`, { method: "DELETE" });
+      const delData = await delRes.json().catch(() => ({}));
+      if (!delRes.ok) {
+        resultEl.textContent = delData.error || "Failed to delete order";
+        return;
+      }
+      resultEl.textContent = `Deleted: ${order.slug}`;
+      loadOrders();
+    });
+    actions.appendChild(deleteBtn);
+
     item.appendChild(actions);
     list.appendChild(item);
   });

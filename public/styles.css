@@ -553,6 +553,21 @@ body.home .page {
   background: #e2e7e1;
 }
 
+.mini-btn-danger {
+  border: 1px solid #e4caca;
+  background: #fff3f3;
+  color: #7a2a2a;
+}
+
+.mini-btn-danger:hover {
+  background: #fdeaea;
+}
+
+.total-word {
+  letter-spacing: 0.28em;
+  white-space: nowrap;
+}
+
 .step-fieldset {
   border: 1px solid var(--line);
   border-radius: 12px;

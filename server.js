@@ -8,7 +8,8 @@ const {
   addRow,
   updateRow,
   deleteRow,
-  listOrders
+  listOrders,
+  deleteOrder
 } = require("./db");
 
 const app = express();
@@ -355,6 +356,20 @@ app.post("/api/orders", requireAdmin, async (req, res) => {
   } catch (err) {
     res.status(400).json({ error: err.message });
   }
+});
+
+app.delete("/api/orders/:slug", requireAdmin, async (req, res) => {
+  const order = await getOrderBySlug(req.params.slug);
+  if (!order) {
+    res.status(404).json({ error: "Order not found" });
+    return;
+  }
+  const ok = await deleteOrder(order.id);
+  if (!ok) {
+    res.status(404).json({ error: "Order not found" });
+    return;
+  }
+  res.json({ ok: true });
 });
 
 app.get("/api/orders/:slug", async (req, res) => {
