@@ -4,125 +4,8 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>NinetyTwo Admin</title>
-    <link rel="stylesheet" href="/styles.css" />
     <link rel="icon" href="/favicon.ico" />
-    <style>
-      .tabs-container {
-        display: flex;
-        gap: 0.5rem;
-        margin-bottom: 2rem;
-        border-bottom: 2px solid #ddd;
-        flex-wrap: wrap;
-      }
-      .tab-button {
-        padding: 0.75rem 1.5rem;
-        border: none;
-        background: #f0f0f0;
-        color: #333;
-        cursor: pointer;
-        font-weight: 600;
-        border-bottom: 3px solid transparent;
-        transition: all 0.3s ease;
-      }
-      .tab-button.active {
-        background: #fff;
-        color: #1a5a45;
-        border-bottom-color: #1a5a45;
-      }
-      .tab-content {
-        display: none;
-      }
-      .tab-content.active {
-        display: block;
-      }
-      .form-section {
-        margin-bottom: 2rem;
-      }
-      .form-section h3 {
-        margin-top: 0;
-        color: #1a5a45;
-        border-bottom: 1px solid #ddd;
-        padding-bottom: 0.5rem;
-      }
-      .product-type-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-        gap: 1rem;
-        margin-top: 1rem;
-      }
-      .product-checkbox {
-        padding: 1rem;
-        border: 2px solid #ddd;
-        border-radius: 0.5rem;
-        cursor: pointer;
-        transition: all 0.3s ease;
-      }
-      .product-checkbox:hover {
-        border-color: #1a5a45;
-        background: #f8f8f8;
-      }
-      .product-checkbox input[type="checkbox"] {
-        cursor: pointer;
-        margin-right: 0.5rem;
-      }
-      .product-checkbox.checked {
-        border-color: #1a5a45;
-        background: #e8f4f2;
-      }
-      .product-options {
-        display: none;
-        padding: 1.5rem;
-        background: #f8f8f8;
-        border-radius: 0.5rem;
-        margin-top: 1rem;
-      }
-      .product-options.active {
-        display: block;
-      }
-      .product-options h4 {
-        margin-top: 0;
-        color: #1a5a45;
-      }
-      .options-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-        gap: 1rem;
-      }
-      .form-group {
-        display: grid;
-        gap: 0.5rem;
-      }
-      .form-group label {
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-        cursor: pointer;
-      }
-      .form-group input[type="checkbox"] {
-        width: auto;
-      }
-      .colors-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-        gap: 0.5rem;
-      }
-      .custom-color-input {
-        display: flex;
-        gap: 0.5rem;
-        margin-top: 1rem;
-      }
-      .custom-color-input input {
-        flex: 1;
-      }
-      .custom-color-input button {
-        padding: 0.5rem 1rem;
-      }
-      .form-actions {
-        display: flex;
-        gap: 1rem;
-        margin-top: 2rem;
-      }
-    </style>
+    <link rel="stylesheet" href="/styles.css" />
   </head>
   <body>
     <div class="page admin-page">
@@ -134,82 +17,58 @@
       </header>
 
       <section class="admin-card">
-        <h2>Create Order</h2>
-        
-        <div class="tabs-container">
-          <button type="button" class="tab-button active" data-tab="basic-info">1. Basic Info</button>
-          <button type="button" class="tab-button" data-tab="configuration">2. Configuration</button>
-          <button type="button" class="tab-button" data-tab="products">3. Products</button>
-          <button type="button" class="tab-button" data-tab="options">4. Product Options</button>
-          <button type="button" class="tab-button" data-tab="pricing">5. Units & Pricing</button>
-        </div>
+        <h2>Existing orders</h2>
+        <div id="orders-list" class="orders-list">Loading…</div>
+      </section>
 
+      <section class="admin-card">
+        <h2>Create order</h2>
         <form id="create-form" class="form">
-          <!-- TAB 1: BASIC INFO -->
-          <div id="basic-info" class="tab-content active">
-            <div class="form-section">
-              <h3>Order Information</h3>
+          <fieldset class="step-fieldset">
+            <legend>1. Order information</legend>
+            <div class="step-grid">
               <label>
-                Order ID (slug)
-                <input type="text" name="slug" required placeholder="e.g., fc_name" />
+                ID
+                <input type="text" name="slug" required placeholder="fc_name" />
               </label>
               <label>
-                Order Title
-                <input type="text" name="title" required placeholder="e.g., FC NAME" />
+                Title
+                <input type="text" name="title" required placeholder="FC NAME" />
+              </label>
+              <label>
+                Language
+                <select name="language" id="language" required>
+                  <option value="">Select language</option>
+                  <option value="en">English</option>
+                  <option value="ru">Russian</option>
+                  <option value="sr">Serbian</option>
+                </select>
+              </label>
+              <label>
+                Sport
+                <select name="sport" id="sport" required>
+                  <option value="">Select sport</option>
+                  <option value="hockey">Hockey</option>
+                  <option value="football">Football</option>
+                  <option value="other">Other</option>
+                </select>
               </label>
               <label>
                 Rows count
                 <input type="number" name="rowsCount" value="20" min="1" />
               </label>
             </div>
-          </div>
+            <div class="mini-note">After language and sport selection, products will be available.</div>
+          </fieldset>
 
-          <!-- TAB 2: CONFIGURATION -->
-          <div id="configuration" class="tab-content">
-            <div class="form-section">
-              <h3>Language</h3>
-              <label>
-                <select name="language">
-                  <option value="ENG" selected>English</option>
-                  <option value="RUS">Русский</option>
-                </select>
-                Language
-              </label>
-            </div>
+          <fieldset id="products-step" class="step-fieldset is-locked" disabled>
+            <legend>2. Products</legend>
+            <div id="products-container" class="products-grid"></div>
+          </fieldset>
 
-            <div class="form-section">
-              <h3>Sport Type</h3>
-              <label>
-                <select name="sport" id="sport-select">
-                  <option value="Football" selected>Football</option>
-                  <option value="Hockey">Hockey</option>
-                  <option value="Other">Other</option>
-                </select>
-                Select Sport
-              </label>
-            </div>
-          </div>
-
-          <!-- TAB 3: PRODUCTS -->
-          <div id="products" class="tab-content">
-            <div class="form-section">
-              <h3>Select Products</h3>
-              <div id="products-container" class="product-type-grid"></div>
-            </div>
-          </div>
-
-          <!-- TAB 4: PRODUCT OPTIONS -->
-          <div id="options" class="tab-content">
-            <div class="form-section">
-              <h3>Product Options</h3>
-              <div id="options-container"></div>
-            </div>
-          </div>
-
-          <!-- TAB 5: UNITS & PRICING -->
-          <div id="pricing" class="tab-content">
-            <div class="form-section">
-              <h3>Units</h3>
+          <fieldset id="pricing-step" class="step-fieldset is-locked" disabled>
+            <legend>3. Prices and units</legend>
+            <div class="step-grid">
               <label>
                 pcs unit
                 <select name="unitPcsLabel">
@@ -227,147 +86,12 @@
                 </select>
               </label>
             </div>
-
-            <div class="form-section">
-              <h3>Default Prices</h3>
-              <label>
-                Jersey price
-                <input type="number" step="0.1" name="priceJersey" value="21.9" data-price-field="price_jersey" />
-              </label>
-              <label>
-                Shorts price
-                <input type="number" step="0.1" name="priceShorts" value="7.7" data-price-field="price_shorts" />
-              </label>
-              <label>
-                Socks price
-                <input type="number" step="0.1" name="priceSocks" value="0" data-price-field="price_socks" />
-              </label>
-            </div>
-
-            <div class="form-section">
-              <h3>Available Colors</h3>
-              <div id="color-options-container" class="colors-grid">
-                <label><input type="checkbox" name="colorOptions" value="Red" /> Red</label>
-                <label><input type="checkbox" name="colorOptions" value="Blue" /> Blue</label>
-                <label><input type="checkbox" name="colorOptions" value="White" /> White</label>
-                <label><input type="checkbox" name="colorOptions" value="Yellow" /> Yellow</label>
-                <label><input type="checkbox" name="colorOptions" value="Black" /> Black</label>
-                <label><input type="checkbox" name="colorOptions" value="Green" /> Green</label>
-                <label><input type="checkbox" name="colorOptions" value="Orange" /> Orange</label>
-                <label><input type="checkbox" name="colorOptions" value="Purple" /> Purple</label>
-                <label><input type="checkbox" name="colorOptions" value="Pink" /> Pink</label>
-                <label><input type="checkbox" name="colorOptions" value="Gray" /> Gray</label>
-              </div>
-              <div class="custom-color-input">
-                <input type="text" id="custom-color-input" placeholder="Add custom color" />
-                <button type="button" class="btn-add-color">+</button>
-              </div>
-            </div>
-
-            <div class="form-actions">
-              <button class="btn" type="submit">Create Order</button>
-            </div>
-          </div>
-        </form>
-        <div id="create-result" class="result"></div>
-      </section>
-
-      <section class="admin-card" id="edit-section" style="display:none;">
-        <h2>Edit Order</h2>
-        <form id="edit-form" class="form">
-          <input type="hidden" name="slug" id="edit-slug" />
-          <div class="form-section">
-            <h3>Columns Configuration</h3>
-            <fieldset class="columns-fieldset">
-              <legend>Select Columns</legend>
-              <label><input type="checkbox" name="columns" value="name" /> SURNAME</label>
-              <label><input type="checkbox" name="columns" value="number" /> NUMBER</label>
-              <label><input type="checkbox" name="columns" value="height_cm" /> HEIGHT</label>
-              <label><input type="checkbox" name="columns" value="weight_kg" /> WEIGHT</label>
-              <label><input type="checkbox" name="columns" value="size" /> JERSEY SIZE</label>
-              <label><input type="checkbox" name="columns" value="size_shorts" /> SHORTS SIZE</label>
-              <label><input type="checkbox" name="columns" value="size_socks" /> SOCKS SIZE</label>
-              <label><input type="checkbox" name="columns" value="type" /> TYPE</label>
-              <label><input type="checkbox" name="columns" value="jersey_color" /> JERSEY COLOR</label>
-              <label><input type="checkbox" name="columns" value="socks_color" /> SOCKS COLOR</label>
-              <label><input type="checkbox" name="columns" value="destination" /> DESTINATION</label>
-              <label><input type="checkbox" name="columns" value="qty_jersey" /> QUANTITY JERSEY</label>
-              <label><input type="checkbox" name="columns" value="qty_shorts" /> QUANTITY SHORTS</label>
-              <label><input type="checkbox" name="columns" value="qty_socks" /> QUANTITY SOCKS</label>
-              <label><input type="checkbox" name="columns" value="price_jersey" /> JERSEY PRICE</label>
-              <label><input type="checkbox" name="columns" value="price_shorts" /> SHORTS PRICE</label>
-              <label><input type="checkbox" name="columns" value="price_socks" /> SOCKS PRICE</label>
-              <label><input type="checkbox" name="columns" value="total_price" /> TOTAL PRICE</label>
-            </fieldset>
-          </div>
-
-          <fieldset class="columns-fieldset" id="edit-color-options" style="display:none;">
-            <legend>Available Colors</legend>
-            <div id="edit-color-options-container" class="colors-grid">
-              <label><input type="checkbox" name="colorOptions" value="Red" /> Red</label>
-              <label><input type="checkbox" name="colorOptions" value="Blue" /> Blue</label>
-              <label><input type="checkbox" name="colorOptions" value="White" /> White</label>
-              <label><input type="checkbox" name="colorOptions" value="Yellow" /> Yellow</label>
-              <label><input type="checkbox" name="colorOptions" value="Black" /> Black</label>
-              <label><input type="checkbox" name="colorOptions" value="Green" /> Green</label>
-              <label><input type="checkbox" name="colorOptions" value="Orange" /> Orange</label>
-              <label><input type="checkbox" name="colorOptions" value="Purple" /> Purple</label>
-              <label><input type="checkbox" name="colorOptions" value="Pink" /> Pink</label>
-              <label><input type="checkbox" name="colorOptions" value="Gray" /> Gray</label>
-            </div>
-            <div class="custom-color-input">
-              <input type="text" id="edit-custom-color-input" placeholder="Add custom color" />
-              <button type="button" class="btn-add-color" id="edit-btn-add-color">+</button>
-            </div>
+            <div id="pricing-fields" class="step-grid"></div>
           </fieldset>
 
-          <div class="form-section">
-            <h3>Units</h3>
-            <label>
-              pcs unit
-              <select name="unitPcsLabel" id="edit-unitPcsLabel">
-                <option value="pcs">pcs</option>
-                <option value="шт">шт</option>
-              </select>
-            </label>
-            <label>
-              currency unit
-              <select name="unitCurrencyLabel" id="edit-unitCurrencyLabel">
-                <option value="EUR">EUR</option>
-                <option value="RSD">RSD</option>
-                <option value="RUB">RUB</option>
-                <option value="USD">USD</option>
-              </select>
-            </label>
-          </div>
-
-          <div class="form-section">
-            <h3>Prices</h3>
-            <label>
-              Jersey price
-              <input type="number" step="0.1" name="priceJersey" data-price-field="price_jersey" />
-            </label>
-            <label>
-              Shorts price
-              <input type="number" step="0.1" name="priceShorts" data-price-field="price_shorts" />
-            </label>
-            <label>
-              Socks price
-              <input type="number" step="0.1" name="priceSocks" data-price-field="price_socks" />
-            </label>
-          </div>
-
-          <div class="form-actions">
-            <button class="btn" type="submit">Update</button>
-            <button class="btn" type="button" id="cancel-edit" style="background: #999;">Cancel</button>
-          </div>
+          <button class="btn" type="submit">Create</button>
         </form>
-        <div id="edit-result" class="result"></div>
-      </section>
-
-      <section class="admin-card">
-        <h2>Existing Orders</h2>
-        <div id="orders-list" class="orders-list">Loading…</div>
+        <div id="create-result" class="result"></div>
       </section>
     </div>
 

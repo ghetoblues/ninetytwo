@@ -553,6 +553,95 @@ body.home .page {
   background: #e2e7e1;
 }
 
+.step-fieldset {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 12px;
+  display: grid;
+  gap: 12px;
+}
+
+.step-fieldset legend {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--brand-2);
+  padding: 0 6px;
+}
+
+.step-fieldset.is-locked {
+  opacity: 0.55;
+}
+
+.step-grid {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.mini-note {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.products-grid {
+  display: grid;
+  gap: 12px;
+}
+
+.product-card {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 10px;
+  background: #fbfcfa;
+  display: grid;
+  gap: 10px;
+}
+
+.product-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--ink);
+}
+
+.product-params {
+  border-top: 1px dashed #d7ded6;
+  padding-top: 10px;
+  display: grid;
+  gap: 8px;
+}
+
+.tiny-check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: #314139;
+}
+
+.param-options {
+  margin: 2px 0 0 24px;
+  padding: 8px;
+  border-radius: 10px;
+  border: 1px solid #dce3db;
+  background: #f5f8f3;
+  display: grid;
+  gap: 8px;
+}
+
+.param-options-title {
+  font-size: 11px;
+  font-weight: 600;
+  color: #3c4d45;
+}
+
+.param-options-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+}
+
 @media (max-width: 900px) {
   .topbar {
     grid-template-columns: 1fr;
@@ -569,6 +658,10 @@ body.home .page {
 
   .cards {
     display: grid;
+  }
+
+  .step-grid {
+    grid-template-columns: 1fr;
   }
 }
 

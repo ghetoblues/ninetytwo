@@ -22,21 +22,6 @@ const sizeChart = [
   { size: "4XL", height: [190, 195], weight: [90, 100] }
 ];
 
-const hockeySizeChart = [
-  { size: "110", height: [105, 115] },
-  { size: "120", height: [116, 125] },
-  { size: "130", height: [126, 135] },
-  { size: "140", height: [136, 145] },
-  { size: "150", height: [146, 155] },
-  { size: "160/M", height: [156, 165] },
-  { size: "170/L", height: [166, 175] },
-  { size: "180/XL", height: [176, 185] },
-  { size: "190/XXL", height: [186, 195] },
-  { size: "190/3XL", height: [196, 999] },
-  { size: "GOALIE ADULT", height: null },
-  { size: "GOALIE KID", height: null }
-];
-
 let unitByKey = {};
 
 function getSlug() {
@@ -50,40 +35,11 @@ function inRange(value, range) {
   return value >= range[0] && value <= range[1];
 }
 
-function getOptionValues(options) {
-  // Handle both array of strings and array of {value, label} objects
-  if (!Array.isArray(options)) return [];
-  if (options.length === 0) return [];
-  if (typeof options[0] === 'object' && options[0].value) {
-    return options.map(opt => opt.value);
-  }
-  return options;
-}
-
-function getOptionLabel(optionValue, options) {
-  // Get display label for option value
-  if (!Array.isArray(options)) return String(optionValue);
-  if (options.length === 0) return String(optionValue);
-  if (typeof options[0] === 'object' && options[0].value) {
-    const found = options.find(opt => opt.value === optionValue);
-    return found ? found.label : String(optionValue);
-  }
-  return String(optionValue);
-}
-
 function suggestSize(rowData) {
   const height = Number(rowData.height_cm);
   const weight = Number(rowData.weight_kg);
   const hasHeight = Number.isFinite(height) && height > 0;
   const hasWeight = Number.isFinite(weight) && weight > 0;
-  // if order configured as Hockey, use height-only hockey chart
-  if (order && order.config && order.config.sport === "Hockey") {
-    if (!hasHeight) return null;
-    const match = hockeySizeChart.find((r) => r.height !== null && inRange(height, r.height));
-    if (match) return { size: match.size, mode: "match" };
-    return null;
-  }
-
   if (!hasHeight || !hasWeight) return null;
   if (height >= 200 && weight >= 100) return { size: "5XL", mode: "match" };
 
@@ -164,15 +120,59 @@ function getValue(rowData, col) {
   return typeof value === "undefined" ? "" : value;
 }
 
+function getQuantityKeys() {
+  if (!order || !Array.isArray(order.columns)) return [];
+  return order.columns.filter((col) => col.key.startsWith("qty_")).map((col) => col.key);
+}
+
+function getPriceKeyForQty(qtyKey) {
+  return qtyKey.replace(/^qty_/, "price_");
+}
+
+function hasColumn(key) {
+  return Boolean(order && order.columns && order.columns.find((col) => col.key === key));
+}
+
+function getJerseyMethodKey(rowData) {
+  const raw = String(rowData.jersey_method || "").trim().toLowerCase();
+  if (raw.includes("subl")) return "sublimated";
+  if (raw.includes("embro")) return "embroidered";
+  return "complex";
+}
+
+function getJerseyPrice(rowData) {
+  const method = getJerseyMethodKey(rowData);
+  const byMethodKey = {
+    sublimated: "price_jersey_sublimated",
+    embroidered: "price_jersey_embroidered",
+    complex: "price_jersey_complex"
+  };
+
+  const methodPriceKey = byMethodKey[method];
+  if (methodPriceKey && hasColumn(methodPriceKey)) {
+    return Number(rowData[methodPriceKey] || getPriceDefault(methodPriceKey) || 0);
+  }
+  if (hasColumn("price_jersey_complex")) {
+    return Number(rowData.price_jersey_complex || getPriceDefault("price_jersey_complex") || 0);
+  }
+  return Number(rowData.price_jersey || getPriceDefault("price_jersey") || 0);
+}
+
+function computeRowTotal(rowData) {
+  return getQuantityKeys().reduce((acc, qtyKey) => {
+    const qty = Number(rowData[qtyKey] || 0);
+    const price =
+      qtyKey === "qty_jersey"
+        ? getJerseyPrice(rowData)
+        : Number(rowData[getPriceKeyForQty(qtyKey)] || getPriceDefault(getPriceKeyForQty(qtyKey)));
+    if (!Number.isFinite(qty) || !Number.isFinite(price)) return acc;
+    return acc + qty * price;
+  }, 0);
+}
+
 function computeFormula(rowData, col) {
   if (col.key === "total_price") {
-    const qtyJersey = Number(rowData.qty_jersey || 0);
-    const qtyShorts = Number(rowData.qty_shorts || 0);
-    const qtySocks = Number(rowData.qty_socks || 0);
-    const priceJersey = Number(rowData.price_jersey || col.priceJersey || getPriceDefault("price_jersey"));
-    const priceShorts = Number(rowData.price_shorts || col.priceShorts || getPriceDefault("price_shorts"));
-    const priceSocks = Number(rowData.price_socks || col.priceSocks || getPriceDefault("price_socks"));
-    const total = qtyJersey * priceJersey + qtyShorts * priceShorts + qtySocks * priceSocks;
+    const total = computeRowTotal(rowData);
     return Number.isFinite(total) ? total.toFixed(2) : "0.00";
   }
   return "";
@@ -225,22 +225,13 @@ function formatPdfCell(col, value) {
 
 function getPdfColumns() {
   if (pdfMode === "factory") {
-    return order.columns.filter(
-      (col) =>
-        col.key !== "price_jersey" &&
-        col.key !== "price_shorts" &&
-        col.key !== "price_socks" &&
-        col.key !== "total_price"
-    );
+    return order.columns.filter((col) => !col.key.startsWith("price_") && col.key !== "total_price");
   }
   return order.columns;
 }
 
 function isRowZeroQuantity(rowData) {
-  const qtyJersey = Number(rowData.qty_jersey || 0);
-  const qtyShorts = Number(rowData.qty_shorts || 0);
-  const qtySocks = Number(rowData.qty_socks || 0);
-  return qtyJersey === 0 && qtyShorts === 0 && qtySocks === 0;
+  return getQuantityKeys().every((qtyKey) => Number(rowData[qtyKey] || 0) === 0);
 }
 
 function getPdfMeta() {
@@ -253,8 +244,48 @@ function getPdfMeta() {
   const timeLabel = now.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" });
   const currencyLabel = (order.unitLabels && order.unitLabels.currency) || "EUR";
   const totalPrice = sumTotalPrice();
-  const sportLabel = order.config?.sport || "Football";
-  return { dateLabel, timeLabel, currencyLabel, totalPrice, sportLabel };
+  return { dateLabel, timeLabel, currencyLabel, totalPrice };
+}
+
+function getTotalQuantity() {
+  return getQuantityKeys().reduce((acc, key) => acc + Number(sumColumn(key) || 0), 0);
+}
+
+function getColorsCount() {
+  if (!hasColumn("color")) return 0;
+  const colors = new Set(
+    rows
+      .map((row) => String((row.data && row.data.color) || "").trim())
+      .filter(Boolean)
+  );
+  return colors.size;
+}
+
+function getFactoryMethod() {
+  const totalCol = order && order.columns && order.columns.find((col) => col.key === "total_price");
+  const mode = totalCol && typeof totalCol.jerseyPricingMode === "string" ? totalCol.jerseyPricingMode : "";
+  if (mode) return mode;
+
+  if (hasColumn("jersey_method")) {
+    const methods = Array.from(
+      new Set(
+        rows
+          .map((row) => String((row.data && row.data.jersey_method) || "").trim())
+          .filter(Boolean)
+      )
+    );
+    if (methods.length === 1) return methods[0];
+    if (methods.length > 1) return methods.join(" / ");
+  }
+
+  if (hasColumn("price_jersey")) {
+    const jerseyPrice = Number(getPriceDefault("price_jersey"));
+    if (Math.abs(jerseyPrice - 35) < 0.001) return "Sublimated";
+    if (Math.abs(jerseyPrice - 72) < 0.001) return "Embroidered";
+    if (Math.abs(jerseyPrice - 82) < 0.001 || Math.abs(jerseyPrice - 22) < 0.001) return "Complex";
+  }
+
+  return "-";
 }
 
 function getPdfStyles() {
@@ -348,13 +379,10 @@ function getPdfStyles() {
         background: #fafbf8;
       }
       .index {
-        width: 20px;
-        text-align: center;
-        background: #f4f6f2;
-      }
-      td:nth-child(2) {
+        width: 28px;
         text-align: center;
         font-weight: 600;
+        background: #f4f6f2;
       }
       .total-row td {
         font-weight: 700;
@@ -376,7 +404,7 @@ function getPdfStyles() {
 }
 
 function getPdfBodyHtml() {
-  const { dateLabel, timeLabel, currencyLabel, totalPrice, sportLabel } = getPdfMeta();
+  const { dateLabel, timeLabel, currencyLabel, totalPrice } = getPdfMeta();
   const pdfColumns = getPdfColumns();
 
   const columnHeaders = pdfColumns.map((col) => {
@@ -384,13 +412,6 @@ function getPdfBodyHtml() {
     const label = unit ? `${col.label} (${unit})` : col.label;
     return `<th>${escapeHtml(label)}</th>`;
   });
-
-  const totalQuantity = rows.reduce((sum, row) => {
-    const qtyJersey = Number(row.data?.qty_jersey || 0);
-    const qtyShorts = Number(row.data?.qty_shorts || 0);
-    const qtySocks = Number(row.data?.qty_socks || 0);
-    return sum + qtyJersey + qtyShorts + qtySocks;
-  }, 0);
 
   const bodyRows = rows
     .filter((row) => !isRowZeroQuantity(row.data || {}))
@@ -407,7 +428,7 @@ function getPdfBodyHtml() {
 
   const footerCells = pdfColumns
     .map((col) => {
-      if (col.key === "qty_jersey" || col.key === "qty_shorts" || col.key === "qty_socks") {
+      if (col.key.startsWith("qty_")) {
         return `<td>${escapeHtml(sumColumn(col.key))}</td>`;
       }
       if (col.key === "total_price") {
@@ -418,31 +439,39 @@ function getPdfBodyHtml() {
     .join("");
 
   const summaryCards = [];
-  summaryCards.push(`
-        <div class="summary-card">
-          <span>Type</span>
-          <strong>${escapeHtml(sportLabel)}</strong>
-        </div>`);
-  summaryCards.push(`
-        <div class="summary-card">
-          <span>Total quantity</span>
-          <strong>${escapeHtml(totalQuantity)}</strong>
-        </div>`);
   if (pdfMode !== "factory") {
     summaryCards.push(`
         <div class="summary-card">
-          <span>Total price</span>
-          <strong>${escapeHtml(formatMoney(totalPrice))} ${escapeHtml(currencyLabel)}</strong>
+          <span>TOTAL QUANTITY</span>
+          <strong>${escapeHtml(String(getTotalQuantity()))}</strong>
         </div>`);
-  } else {
-    const colorCount = (order.config?.colorOptions && order.config.colorOptions.length) || 0;
     summaryCards.push(`
         <div class="summary-card">
-          <span>Colors</span>
-          <strong>${escapeHtml(colorCount)}</strong>
+          <span>TOTAL PRICE</span>
+          <strong>${escapeHtml(formatMoney(totalPrice))} ${escapeHtml(currencyLabel)}</strong>
+        </div>`);
+    summaryCards.push(`
+        <div class="summary-card">
+          <span>METHOD</span>
+          <strong>${escapeHtml(getFactoryMethod())}</strong>
+        </div>`);
+  } else {
+    summaryCards.push(`
+        <div class="summary-card">
+          <span>TOTAL QUANTITY</span>
+          <strong>${escapeHtml(String(getTotalQuantity()))}</strong>
+        </div>`);
+    summaryCards.push(`
+        <div class="summary-card">
+          <span>COLORS</span>
+          <strong>${escapeHtml(String(getColorsCount()))}</strong>
+        </div>`);
+    summaryCards.push(`
+        <div class="summary-card">
+          <span>METHOD</span>
+          <strong>${escapeHtml(getFactoryMethod())}</strong>
         </div>`);
   }
-
   return `
       <div class="header">
         <img class="logo" id="pdf-logo" src="/logo_black.png" alt="NinetyTwo" />
@@ -457,7 +486,7 @@ function getPdfBodyHtml() {
       </div>
       <table>
         <thead>
-          <tr><th>#</th>${columnHeaders.join("")}</tr>
+          <tr><th>ITEM #</th>${columnHeaders.join("")}</tr>
         </thead>
         <tbody>
           ${bodyRows}
@@ -591,7 +620,7 @@ function handlePaste(event) {
       if (!col) return;
       let value = rawCell.trim();
       if (col.type === "number") value = value.replace(",", ".");
-      if (col.type === "select" && !getOptionValues(col.options).includes(value)) return;
+      if (col.type === "select" && !col.options.includes(value)) return;
       row.data[key] = value;
       updated.add(row.id);
     });
@@ -614,7 +643,7 @@ function renderTable() {
   const thead = document.createElement("thead");
   const headRow = document.createElement("tr");
   const indexTh = document.createElement("th");
-  indexTh.textContent = "#";
+  indexTh.textContent = "ITEM #";
   indexTh.className = "sticky-col sticky-0 col-index";
   headRow.appendChild(indexTh);
   order.columns.forEach((col, colIndex) => {
@@ -669,13 +698,15 @@ function renderTable() {
         empty.value = "";
         empty.textContent = "";
         select.appendChild(empty);
-        getOptionValues(col.options).forEach((optValue) => {
-          const optLabel = getOptionLabel(optValue, col.options);
+        col.options.forEach((opt) => {
           const option = document.createElement("option");
-          option.value = optValue;
-          option.textContent = optLabel;
+          option.value = opt;
+          option.textContent = opt;
           select.appendChild(option);
         });
+        if (col.key === "jersey_method" && !row.data[col.key] && col.options.length > 0) {
+          row.data[col.key] = col.options[0];
+        }
         select.value = row.data[col.key] || "";
         select.addEventListener("change", (e) => {
           row.data[col.key] = e.target.value;
@@ -752,26 +783,14 @@ function renderTable() {
   const tfoot = document.createElement("tfoot");
   const totalRow = document.createElement("tr");
   totalRow.className = "footer-row";
-  
-  // Find the index of first qty column
-  const firstQtyIndex = order.columns.findIndex(
-    (col) => col.key === "qty_jersey" || col.key === "qty_shorts" || col.key === "qty_socks"
-  );
-  
-  // TOTAL label spans from index column through all columns before first qty column
-  // colspan = 1 (index) + firstQtyIndex (columns before qty)
   const totalLabel = document.createElement("td");
   totalLabel.textContent = "TOTAL";
-  totalLabel.colSpan = firstQtyIndex >= 0 ? firstQtyIndex + 1 : order.columns.length + 1;
   totalRow.appendChild(totalLabel);
 
-  // Add cells only for columns after the TOTAL label
-  const startIdx = firstQtyIndex >= 0 ? firstQtyIndex : 0;
-  for (let i = startIdx; i < order.columns.length; i++) {
-    const col = order.columns[i];
+  order.columns.forEach((col) => {
     const td = document.createElement("td");
     td.dataset.key = col.key;
-    if (col.key === "qty_jersey" || col.key === "qty_shorts" || col.key === "qty_socks") {
+    if (col.key.startsWith("qty_")) {
       td.textContent = sumColumn(col.key).toString();
     } else if (col.key === "total_price") {
       td.textContent = sumTotalPrice().toFixed(2);
@@ -779,8 +798,7 @@ function renderTable() {
       td.textContent = "";
     }
     totalRow.appendChild(td);
-  }
-  
+  });
   const totalDelete = document.createElement("td");
   totalDelete.className = "delete-col";
   totalRow.appendChild(totalDelete);
@@ -835,13 +853,15 @@ function renderCards() {
         empty.value = "";
         empty.textContent = "";
         select.appendChild(empty);
-        getOptionValues(col.options).forEach((optValue) => {
-          const optLabel = getOptionLabel(optValue, col.options);
+        col.options.forEach((opt) => {
           const option = document.createElement("option");
-          option.value = optValue;
-          option.textContent = optLabel;
+          option.value = opt;
+          option.textContent = opt;
           select.appendChild(option);
         });
+        if (col.key === "jersey_method" && !row.data[col.key] && col.options.length > 0) {
+          row.data[col.key] = col.options[0];
+        }
         select.value = row.data[col.key] || "";
         select.addEventListener("change", (e) => {
           row.data[col.key] = e.target.value;
@@ -910,15 +930,7 @@ function sumColumn(key) {
 }
 
 function sumTotalPrice() {
-  return rows.reduce((acc, row) => {
-    const qtyJersey = Number(row.data.qty_jersey || 0);
-    const qtyShorts = Number(row.data.qty_shorts || 0);
-    const qtySocks = Number(row.data.qty_socks || 0);
-    const priceJersey = Number(row.data.price_jersey || getPriceDefault("price_jersey"));
-    const priceShorts = Number(row.data.price_shorts || getPriceDefault("price_shorts"));
-    const priceSocks = Number(row.data.price_socks || getPriceDefault("price_socks"));
-    return acc + qtyJersey * priceJersey + qtyShorts * priceShorts + qtySocks * priceSocks;
-  }, 0);
+  return rows.reduce((acc, row) => acc + computeRowTotal(row.data || {}), 0);
 }
 
 function refreshTotals() {
@@ -929,7 +941,7 @@ function refreshTotals() {
   order.columns.forEach((col) => {
     const cell = totalRow.querySelector(`td[data-key="${col.key}"]`);
     if (!cell) return;
-    if (col.key === "qty_jersey" || col.key === "qty_shorts" || col.key === "qty_socks") {
+    if (col.key.startsWith("qty_")) {
       cell.textContent = sumColumn(col.key).toString();
     } else if (col.key === "total_price") {
       cell.textContent = sumTotalPrice().toFixed(2);
@@ -959,20 +971,13 @@ async function loadOrder() {
   order = await res.json();
   rows = order.rows.map((row) => ({ id: row.id, data: row.data || {} }));
   orderTitleEl.textContent = order.title;
-  document.title = `${order.title} - NinetyTwo`;
   const pcsLabel = (order.unitLabels && order.unitLabels.pcs) || "pcs";
   const currencyLabel = (order.unitLabels && order.unitLabels.currency) || "EUR";
-  unitByKey = {
-    height_cm: "cm",
-    weight_kg: "kg",
-    qty_jersey: pcsLabel,
-    qty_shorts: pcsLabel,
-    qty_socks: pcsLabel,
-    price_jersey: currencyLabel,
-    price_shorts: currencyLabel,
-    price_socks: currencyLabel,
-    total_price: currencyLabel
-  };
+  unitByKey = { height_cm: "cm", weight_kg: "kg" };
+  order.columns.forEach((col) => {
+    if (col.key.startsWith("qty_")) unitByKey[col.key] = pcsLabel;
+    if (col.key.startsWith("price_") || col.key === "total_price") unitByKey[col.key] = currencyLabel;
+  });
   renderTable();
   renderCards();
   setupActions();

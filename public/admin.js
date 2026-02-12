@@ -1,254 +1,528 @@
-// Product definitions
-const PRODUCT_CONFIG = {
-  Hockey: {
-    "Hockey Jerseys": {
-      label: "Hockey Jerseys",
-      fields: [
-        { name: "name", label: "SURNAME", type: "checkbox" },
-        { name: "number", label: "PLAYER NUMBER", type: "checkbox" },
-        { name: "height_cm", label: "HEIGHT", type: "checkbox" },
-        { name: "weight_kg", label: "WEIGHT", type: "checkbox" },
-        { name: "size", label: "JERSEYS SIZE (Hockey Grid)", type: "checkbox" },
-        { name: "jersey_color", label: "JERSEY COLOR", type: "checkbox" },
-        { name: "qty_jersey", label: "JERSEY QUANTITY", type: "checkbox" },
-        { name: "price_jersey", label: "JERSEY PRICE", type: "checkbox" }
-      ]
-    },
-    "Hockey Shorts": {
-      label: "Hockey Shorts",
-      fields: [
-        { name: "size_shorts", label: "SHORTS SIZE (Hockey Grid)", type: "checkbox" },
-        { name: "jersey_color", label: "SHORTS COLOR (matches Jersey colors)", type: "checkbox" },
-        { name: "qty_shorts", label: "SHORTS QUANTITY", type: "checkbox" },
-        { name: "price_shorts", label: "SHORTS PRICE", type: "checkbox" }
-      ]
-    },
-    "Hockey Socks": {
-      label: "Hockey Socks",
-      fields: [
-        { name: "size_socks", label: "SOCKS SIZE", type: "checkbox" },
-        { name: "jersey_color", label: "SOCKS COLOR (matches Jersey colors)", type: "checkbox" },
-        { name: "qty_socks", label: "SOCKS QUANTITY", type: "checkbox" },
-        { name: "price_socks", label: "SOCKS PRICE", type: "checkbox" }
-      ]
-    }
-  },
-  Football: {
-    "Football Jerseys": {
-      label: "Football Jerseys",
-      fields: [
-        { name: "name", label: "SURNAME", type: "checkbox" },
-        { name: "number", label: "PLAYER NUMBER", type: "checkbox" },
-        { name: "height_cm", label: "HEIGHT", type: "checkbox" },
-        { name: "weight_kg", label: "WEIGHT", type: "checkbox" },
-        { name: "size", label: "JERSEYS SIZE (Football Grid)", type: "checkbox" },
-        { name: "jersey_color", label: "JERSEY COLOR", type: "checkbox" },
-        { name: "qty_jersey", label: "JERSEY QUANTITY", type: "checkbox" },
-        { name: "price_jersey", label: "JERSEY PRICE", type: "checkbox" }
-      ]
-    },
-    "Football Shorts": {
-      label: "Football Shorts",
-      fields: [
-        { name: "size_shorts", label: "SHORTS SIZE (Football Grid)", type: "checkbox" },
-        { name: "jersey_color", label: "SHORTS COLOR (matches Jersey colors)", type: "checkbox" },
-        { name: "qty_shorts", label: "SHORTS QUANTITY", type: "checkbox" },
-        { name: "price_shorts", label: "SHORTS PRICE", type: "checkbox" }
-      ]
-    }
-  },
-  Other: {
-    "Caps": {
-      label: "Caps",
-      fields: [
-        { name: "cap_style", label: "STYLE (6 panel cap, trucker cap with mesh)", type: "checkbox" },
-        { name: "cap_logo", label: "LOGO (Embroidery 3D)", type: "checkbox" },
-        { name: "cap_visor", label: "VISOR (Curved)", type: "checkbox" },
-        { name: "cap_fastener", label: "FASTENER (Plastic snap closure)", type: "checkbox" },
-        { name: "cap_size", label: "CAP SIZE (Adult / Kids)", type: "checkbox" }
-      ]
-    }
-  }
-};
-
-// Add TOTAL PRICE checkbox to all product types if missing
-Object.keys(PRODUCT_CONFIG).forEach(sport => {
-  Object.keys(PRODUCT_CONFIG[sport]).forEach(productKey => {
-    const product = PRODUCT_CONFIG[sport][productKey];
-    if (!product.fields.some(f => f.name === 'total_price')) {
-      product.fields.push({ name: 'total_price', label: 'TOTAL PRICE', type: 'checkbox' });
-    }
-  });
-});
-document.querySelector('.tabs-container').addEventListener('click', function(e) {
-  const btn = e.target.closest('.tab-button');
-  if (!btn) return;
-  const tabName = btn.dataset.tab;
-  // Remove active class from all buttons and contents
-  document.querySelectorAll('.tab-button').forEach(b => b.classList.remove('active'));
-  document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-  btn.classList.add('active');
-  document.getElementById(tabName).classList.add('active');
-});
-
-// Sport and Product Selection
-const sportSelect = document.getElementById("sport-select");
-const productsContainer = document.getElementById("products-container");
-const optionsContainer = document.getElementById("options-container");
-
-function renderProductCheckboxes() {
-  const sport = sportSelect.value;
-  const products = PRODUCT_CONFIG[sport] || {};
-  
-  productsContainer.innerHTML = "";
-  
-  Object.keys(products).forEach(productKey => {
-    const product = products[productKey];
-    const checkbox = document.createElement("div");
-    checkbox.className = "product-checkbox";
-    checkbox.innerHTML = `
-      <input type="checkbox" name="selected-products" value="${productKey}" id="product-${productKey.replace(/\s+/g, "-").toLowerCase()}" />
-      <label for="product-${productKey.replace(/\s+/g, "-").toLowerCase()}">${product.label}</label>
-    `;
-    
-    checkbox.querySelector("input").addEventListener("change", () => {
-      checkbox.classList.toggle("checked");
-      renderProductOptions();
-    });
-    
-    productsContainer.appendChild(checkbox);
-  });
-}
-
-function renderProductOptions() {
-  const sport = sportSelect.value;
-  const selectedProducts = Array.from(document.querySelectorAll("input[name='selected-products']:checked")).map(el => el.value);
-  
-  optionsContainer.innerHTML = "";
-  
-  selectedProducts.forEach(productKey => {
-    const product = PRODUCT_CONFIG[sport][productKey];
-    if (!product) return;
-    
-    const section = document.createElement("div");
-    section.className = "product-options active";
-    section.innerHTML = `<h4>${product.label}</h4><div class="options-grid"></div>`;
-    
-    const grid = section.querySelector(".options-grid");
-    
-    product.fields.forEach(field => {
-      const group = document.createElement("div");
-      group.className = "form-group";
-      group.innerHTML = `
-        <label>
-          <input type="checkbox" name="columns" value="${field.name}" />
-          ${field.label}
-        </label>
-      `;
-      grid.appendChild(group);
-    });
-    
-    optionsContainer.appendChild(section);
-  });
-}
-
-sportSelect.addEventListener("change", () => {
-  renderProductCheckboxes();
-  renderProductOptions();
-});
-
-// Initialize on page load
-renderProductCheckboxes();
-
 const form = document.getElementById("create-form");
 const resultEl = document.getElementById("create-result");
 const ordersList = document.getElementById("orders-list");
+const languageSelect = document.getElementById("language");
+const sportSelect = document.getElementById("sport");
+const productsStep = document.getElementById("products-step");
+const pricingStep = document.getElementById("pricing-step");
+const productsContainer = document.getElementById("products-container");
+const pricingFields = document.getElementById("pricing-fields");
 
-// Function to add custom color checkbox
-function addCustomColorCheckbox(containerId, colorName, autoCheck = false) {
-  const container = document.getElementById(containerId);
-  if (!container) return;
-  
-  // Check if already exists
-  const existing = Array.from(container.querySelectorAll("label")).find(
-    label => label.textContent.trim().toLowerCase() === colorName.toLowerCase()
-  );
-  if (existing) {
-    alert(`Color "${colorName}" already exists`);
+const SIZE_OPTIONS_BY_SPORT = {
+  hockey: {
+    size: ["XS", "S", "M", "L", "XL", "2XL", "3XL", "4XL", "5XL"],
+    size_shorts: ["XS", "S", "M", "L", "XL", "2XL", "3XL", "4XL", "5XL"],
+    size_socks: ["31-34", "35-38", "39-42", "43-46", "47-50"]
+  },
+  football: {
+    size: ["2XS", "XS", "S", "M", "L", "XL", "2XL", "3XL", "4XL"],
+    size_shorts: ["2XS", "XS", "S", "M", "L", "XL", "2XL", "3XL", "4XL"],
+    size_socks: ["35-38", "39-42", "43-46"]
+  },
+  other: {}
+};
+
+const COLUMN_META = {
+  name: { key: "name", label: "SURNAME", type: "text" },
+  number: { key: "number", label: "NUMBER", type: "text" },
+  cap: { key: "cap", label: "CAP", type: "text" },
+  height_cm: { key: "height_cm", label: "HEIGHT", type: "number" },
+  weight_kg: { key: "weight_kg", label: "WEIGHT", type: "number" },
+  size: {
+    key: "size",
+    label: "JERSEY SIZE",
+    type: "select",
+    options: ["XS", "S", "M", "L", "XL", "2XL", "3XL", "4XL", "5XL"]
+  },
+  size_shorts: {
+    key: "size_shorts",
+    label: "SHORTS SIZE",
+    type: "select",
+    options: ["XS", "S", "M", "L", "XL", "2XL", "3XL", "4XL", "5XL"]
+  },
+  size_socks: {
+    key: "size_socks",
+    label: "SOCKS SIZE",
+    type: "select",
+    options: ["XS", "S", "M", "L", "XL", "2XL", "3XL", "4XL", "5XL"]
+  },
+  type: {
+    key: "type",
+    label: "TYPE",
+    type: "select",
+    options: ["Long", "Short"]
+  },
+  jersey_method: {
+    key: "jersey_method",
+    label: "JERSEY METHOD",
+    type: "select",
+    options: ["Sublimated", "Embroidered", "Complex"]
+  },
+  color: {
+    key: "color",
+    label: "COLOR",
+    type: "select",
+    options: ["Blue", "Yellow", "White", "Black", "Red"]
+  },
+  style_cap: {
+    key: "style_cap",
+    label: "STYLE",
+    type: "select",
+    options: ["6 panel cap", "trucker cap with a mesh at the backside"]
+  },
+  logo_cap: {
+    key: "logo_cap",
+    label: "LOGO",
+    type: "select",
+    options: ["Embroidery", "Print", "Patch"]
+  },
+  visor_cap: {
+    key: "visor_cap",
+    label: "VISOR",
+    type: "select",
+    options: ["Curved visor", "Flat visor"]
+  },
+  fastener_cap: {
+    key: "fastener_cap",
+    label: "FASTENER",
+    type: "select",
+    options: ["plastic snap closure", "metal buckle", "velcro"]
+  },
+  size_cap: {
+    key: "size_cap",
+    label: "SIZE",
+    type: "select",
+    options: ["Adult", "Youth", "Kids"]
+  },
+  destination: { key: "destination", label: "DESTINATION", type: "text" },
+  qty_jersey: { key: "qty_jersey", label: "QUANTITY JERSEY", type: "number" },
+  qty_shorts: { key: "qty_shorts", label: "QUANTITY SHORTS", type: "number" },
+  qty_socks: { key: "qty_socks", label: "QUANTITY SOCKS", type: "number" },
+  qty_caps: { key: "qty_caps", label: "QUANTITY CAPS", type: "number" },
+  price_jersey: { key: "price_jersey", label: "JERSEY PRICE", type: "fixed" },
+  price_jersey_sublimated: {
+    key: "price_jersey_sublimated",
+    label: "JERSEY SUBLIMATED PRICE",
+    type: "fixed"
+  },
+  price_jersey_embroidered: {
+    key: "price_jersey_embroidered",
+    label: "JERSEY EMBROIDERED PRICE",
+    type: "fixed"
+  },
+  price_jersey_complex: {
+    key: "price_jersey_complex",
+    label: "JERSEY COMPLEX PRICE",
+    type: "fixed"
+  },
+  price_shorts: { key: "price_shorts", label: "SHORTS PRICE", type: "fixed" },
+  price_socks: { key: "price_socks", label: "SOCKS PRICE", type: "fixed" },
+  price_caps: { key: "price_caps", label: "CAPS PRICE", type: "fixed" },
+  total_price: {
+    key: "total_price",
+    label: "TOTAL PRICE",
+    type: "formula",
+    formula: "qty_jersey*price_jersey + qty_shorts*price_shorts + qty_socks*price_socks + qty_caps*price_caps"
+  }
+};
+
+const PRODUCTS_BY_SPORT = {
+  hockey: [
+    {
+      id: "jersey",
+      title: "Hockey Jersey",
+      qtyKey: "qty_jersey",
+      priceKey: "price_jersey",
+      params: ["size", "type", "color"]
+    },
+    {
+      id: "shorts",
+      title: "Hockey Shorts",
+      qtyKey: "qty_shorts",
+      priceKey: "price_shorts",
+      params: ["size_shorts", "color"]
+    },
+    {
+      id: "socks",
+      title: "Hockey Socks",
+      qtyKey: "qty_socks",
+      priceKey: "price_socks",
+      params: ["size_socks", "color"]
+    }
+  ],
+  football: [
+    {
+      id: "jersey",
+      title: "Football Jersey",
+      qtyKey: "qty_jersey",
+      priceKey: "price_jersey",
+      params: ["size", "type", "color"]
+    },
+    {
+      id: "shorts",
+      title: "Football Shorts",
+      qtyKey: "qty_shorts",
+      priceKey: "price_shorts",
+      params: ["size_shorts", "color"]
+    },
+    {
+      id: "socks",
+      title: "Football Socks",
+      qtyKey: "qty_socks",
+      priceKey: "price_socks",
+      params: ["size_socks", "color"]
+    }
+  ],
+  other: [
+    {
+      id: "caps",
+      title: "Caps",
+      qtyKey: "qty_caps",
+      priceKey: "price_caps",
+      baseFields: ["cap"],
+      params: ["style_cap", "logo_cap", "visor_cap", "fastener_cap", "size_cap"]
+    }
+  ]
+};
+
+const JERSEY_PRICING_BY_SPORT = {
+  hockey: [
+    { value: "Sublimated", price: 35 },
+    { value: "Embroidered", price: 72 },
+    { value: "Complex", price: 82 }
+  ],
+  football: [{ value: "Complex", price: 22 }]
+};
+
+const PRICE_FIELD_META = {
+  priceJersey: {
+    label: "Jersey price",
+    defaultValue: 22,
+    columnKey: "price_jersey"
+  },
+  priceShorts: {
+    label: "Shorts price",
+    defaultValue: 7.7,
+    columnKey: "price_shorts"
+  },
+  priceSocks: {
+    label: "Socks price",
+    defaultValue: 0,
+    columnKey: "price_socks"
+  },
+  priceCaps: {
+    label: "Caps price",
+    defaultValue: 0,
+    columnKey: "price_caps"
+  }
+};
+
+function setStepEnabled(stepEl, enabled) {
+  stepEl.disabled = !enabled;
+  stepEl.classList.toggle("is-locked", !enabled);
+}
+
+function getSelectedProductsSet() {
+  return new Set(Array.from(form.querySelectorAll('input[name="products"]:checked')).map((el) => el.value));
+}
+
+function getJerseyPricingOptions() {
+  return JERSEY_PRICING_BY_SPORT[sportSelect.value] || [{ value: "Complex", price: 22 }];
+}
+
+function getDefaultJerseyPricingMode() {
+  const options = getJerseyPricingOptions();
+  return options.length > 0 ? options[0].value : "Complex";
+}
+
+function getJerseyPriceByMode(mode) {
+  const options = getJerseyPricingOptions();
+  const found = options.find((item) => item.value === mode);
+  return found ? Number(found.price) : Number(PRICE_FIELD_META.priceJersey.defaultValue);
+}
+
+function renderSimplePriceField(name, previousValues) {
+  const meta = PRICE_FIELD_META[name];
+  if (!meta) return;
+  const label = document.createElement("label");
+  label.textContent = meta.label;
+
+  const input = document.createElement("input");
+  input.type = "number";
+  input.step = "0.1";
+  input.name = name;
+  input.value = previousValues[name] || String(meta.defaultValue);
+
+  label.appendChild(input);
+  pricingFields.appendChild(label);
+}
+
+function renderPricingFields() {
+  const previousValues = Object.fromEntries(Array.from(pricingFields.querySelectorAll("[name]")).map((el) => [el.name, el.value]));
+  pricingFields.innerHTML = "";
+
+  const selectedProducts = getSelectedProductsSet();
+  if (selectedProducts.has("jersey")) {
+    const methodLabel = document.createElement("label");
+    methodLabel.textContent = "Jersey type";
+    const methodSelect = document.createElement("select");
+    methodSelect.name = "jerseyPricingMode";
+
+    const options = getJerseyPricingOptions();
+    const defaultMode = options.some((opt) => opt.value === previousValues.jerseyPricingMode)
+      ? previousValues.jerseyPricingMode
+      : getDefaultJerseyPricingMode();
+
+    options.forEach((opt) => {
+      const option = document.createElement("option");
+      option.value = opt.value;
+      option.textContent = opt.value;
+      methodSelect.appendChild(option);
+    });
+    methodSelect.value = defaultMode;
+    methodLabel.appendChild(methodSelect);
+    pricingFields.appendChild(methodLabel);
+
+    const priceLabel = document.createElement("label");
+    priceLabel.textContent = "Jersey price";
+    const priceInput = document.createElement("input");
+    priceInput.type = "number";
+    priceInput.step = "0.1";
+    priceInput.name = "priceJersey";
+    priceInput.value = previousValues.priceJersey || String(getJerseyPriceByMode(defaultMode));
+    methodSelect.addEventListener("change", () => {
+      priceInput.value = String(getJerseyPriceByMode(methodSelect.value));
+    });
+    priceLabel.appendChild(priceInput);
+    pricingFields.appendChild(priceLabel);
+  }
+  if (selectedProducts.has("shorts")) renderSimplePriceField("priceShorts", previousValues);
+  if (selectedProducts.has("socks")) renderSimplePriceField("priceSocks", previousValues);
+  if (selectedProducts.has("caps")) renderSimplePriceField("priceCaps", previousValues);
+}
+
+function updateProgressiveVisibility() {
+  const isOrderInfoReady = Boolean(languageSelect.value) && Boolean(sportSelect.value);
+  setStepEnabled(productsStep, isOrderInfoReady);
+
+  if (!isOrderInfoReady) {
+    setStepEnabled(pricingStep, false);
+    pricingFields.innerHTML = "";
     return;
   }
-  
-  const label = document.createElement("label");
-  const input = document.createElement("input");
-  input.type = "checkbox";
-  input.name = "colorOptions";
-  input.value = colorName;
-  input.checked = autoCheck;
-  
-  label.appendChild(input);
-  label.appendChild(document.createTextNode(" " + colorName));
-  
-  container.appendChild(label);
+
+  const hasSelectedProducts = getSelectedProductsSet().size > 0;
+  setStepEnabled(pricingStep, hasSelectedProducts);
+  renderPricingFields();
 }
 
-// Handle adding custom colors in create form
-const createColorBtn = document.querySelector(".custom-color-input .btn-add-color");
-if (createColorBtn) {
-  createColorBtn.addEventListener("click", (e) => {
-    e.preventDefault();
-    const input = document.getElementById("custom-color-input");
-    const colorName = input.value.trim();
-    
-    if (!colorName) {
-      alert("Please enter a color name");
-      return;
-    }
-    
-    addCustomColorCheckbox("color-options-container", colorName, true);
-    input.value = "";
-    input.focus();
+function createOptionGroup(paramKey, options) {
+  const wrapper = document.createElement("div");
+  wrapper.className = "param-options";
+  wrapper.dataset.paramOptions = paramKey;
+  wrapper.hidden = true;
+
+  const title = document.createElement("div");
+  title.className = "param-options-title";
+  title.textContent = `Select ${COLUMN_META[paramKey].label.toLowerCase()} values`;
+  wrapper.appendChild(title);
+
+  const list = document.createElement("div");
+  list.className = "param-options-list";
+  options.forEach((opt) => {
+    const label = document.createElement("label");
+    label.className = "tiny-check";
+
+    const input = document.createElement("input");
+    input.type = "checkbox";
+    input.name = "__unused__";
+    input.value = opt;
+    input.checked = true;
+
+    label.appendChild(input);
+    label.append(` ${opt}`);
+    list.appendChild(label);
   });
+
+  wrapper.appendChild(list);
+  return wrapper;
 }
 
-// Handle Enter key in custom color input (create form)
-const createColorInput = document.getElementById("custom-color-input");
-if (createColorInput) {
-  createColorInput.addEventListener("keypress", (e) => {
-    if (e.key === "Enter") {
-      e.preventDefault();
-      createColorBtn?.click();
-    }
-  });
+function getParamOptionsForSport(paramKey, sport) {
+  const sportOptions = SIZE_OPTIONS_BY_SPORT[sport];
+  if (sportOptions && Array.isArray(sportOptions[paramKey]) && sportOptions[paramKey].length > 0) {
+    return sportOptions[paramKey];
+  }
+  const meta = COLUMN_META[paramKey];
+  return meta && Array.isArray(meta.options) ? meta.options : [];
 }
 
-// Handle adding custom colors in edit form
-const editColorBtn = document.getElementById("edit-btn-add-color");
-if (editColorBtn) {
-  editColorBtn.addEventListener("click", (e) => {
-    e.preventDefault();
-    const input = document.getElementById("edit-custom-color-input");
-    const colorName = input.value.trim();
-    
-    if (!colorName) {
-      alert("Please enter a color name");
-      return;
-    }
-    
-    addCustomColorCheckbox("edit-color-options-container", colorName, true);
-    input.value = "";
-    input.focus();
+function renderProducts() {
+  productsContainer.innerHTML = "";
+  const isOrderInfoReady = Boolean(languageSelect.value) && Boolean(sportSelect.value);
+  if (!isOrderInfoReady) {
+    return;
+  }
+  const sport = sportSelect.value;
+  const products = PRODUCTS_BY_SPORT[sport] || [];
+
+  products.forEach((product) => {
+    const card = document.createElement("div");
+    card.className = "product-card";
+
+    const topLabel = document.createElement("label");
+    topLabel.className = "product-toggle";
+
+    const productToggle = document.createElement("input");
+    productToggle.type = "checkbox";
+    productToggle.name = "products";
+    productToggle.value = product.id;
+    productToggle.dataset.productToggle = "1";
+
+    const strong = document.createElement("strong");
+    strong.textContent = product.title;
+
+    topLabel.appendChild(productToggle);
+    topLabel.appendChild(strong);
+    card.appendChild(topLabel);
+
+    const paramsWrap = document.createElement("div");
+    paramsWrap.className = "product-params";
+    paramsWrap.hidden = true;
+
+    product.params.forEach((paramKey) => {
+      const paramMeta = COLUMN_META[paramKey];
+      const paramLabel = document.createElement("label");
+      paramLabel.className = "tiny-check";
+
+      const paramInput = document.createElement("input");
+      paramInput.type = "checkbox";
+      paramInput.name = `params__${product.id}`;
+      paramInput.value = paramKey;
+      paramInput.dataset.paramKey = paramKey;
+
+      paramLabel.appendChild(paramInput);
+      paramLabel.append(` ${paramMeta.label}`);
+      paramsWrap.appendChild(paramLabel);
+
+      if (paramMeta.type === "select" && Array.isArray(paramMeta.options)) {
+        const optionGroup = createOptionGroup(paramKey, getParamOptionsForSport(paramKey, sport));
+        optionGroup.dataset.productId = product.id;
+        paramsWrap.appendChild(optionGroup);
+
+        paramInput.addEventListener("change", () => {
+          optionGroup
+            .querySelectorAll('input[type="checkbox"]')
+            .forEach((input) => {
+              input.name = `param_values__${product.id}__${paramKey}`;
+            });
+          optionGroup.hidden = !paramInput.checked;
+        });
+      }
+    });
+
+    productToggle.addEventListener("change", () => {
+      paramsWrap.hidden = !productToggle.checked;
+      if (!productToggle.checked) {
+        paramsWrap
+          .querySelectorAll('input[type="checkbox"]')
+          .forEach((input) => {
+            input.checked = false;
+            if (input.name && input.name.startsWith("param_values__")) {
+              input.checked = true;
+            }
+          });
+        paramsWrap
+          .querySelectorAll(".param-options")
+          .forEach((el) => {
+            el.hidden = true;
+          });
+      }
+      updateProgressiveVisibility();
+    });
+
+    card.appendChild(paramsWrap);
+    productsContainer.appendChild(card);
   });
+
+  updateProgressiveVisibility();
 }
 
-// Handle Enter key in custom color input (edit form)
-const editColorInput = document.getElementById("edit-custom-color-input");
-if (editColorInput) {
-  editColorInput.addEventListener("keypress", (e) => {
-    if (e.key === "Enter") {
-      e.preventDefault();
-      editColorBtn?.click();
-    }
+function getSelectedOptions(productId, paramKey, fallback) {
+  const selected = Array.from(
+    form.querySelectorAll(`input[name="param_values__${productId}__${paramKey}"]:checked`)
+  ).map((el) => el.value);
+  const unique = Array.from(new Set(selected));
+  return unique.length > 0 ? unique : fallback;
+}
+
+function buildCustomColumns({
+  jerseyPricingMode,
+  priceJersey,
+  priceShorts,
+  priceSocks,
+  priceCaps
+}) {
+  const selectedProducts = getSelectedProductsSet();
+  const sport = sportSelect.value;
+
+  const columns = [COLUMN_META.name, COLUMN_META.number];
+
+  const products = PRODUCTS_BY_SPORT[sportSelect.value] || [];
+  products.forEach((product) => {
+    if (!selectedProducts.has(product.id)) return;
+
+    (product.baseFields || []).forEach((fieldKey) => {
+      if (COLUMN_META[fieldKey]) {
+        columns.push(COLUMN_META[fieldKey]);
+      }
+    });
+
+    const selectedParams = new Set(
+      Array.from(form.querySelectorAll(`input[name="params__${product.id}"]:checked`)).map(
+        (el) => el.value
+      )
+    );
+
+    product.params.forEach((paramKey) => {
+      if (!selectedParams.has(paramKey)) return;
+      const base = COLUMN_META[paramKey];
+      const nextCol = { ...base };
+      nextCol.options = getParamOptionsForSport(paramKey, sportSelect.value);
+
+      if (nextCol.type === "select" && Array.isArray(nextCol.options)) {
+        nextCol.options = getSelectedOptions(product.id, paramKey, nextCol.options);
+      }
+
+      columns.push(nextCol);
+    });
+
+    columns.push(COLUMN_META[product.qtyKey]);
   });
+
+  if (selectedProducts.has("jersey")) {
+    columns.push({ ...COLUMN_META.price_jersey, default: priceJersey });
+  }
+  if (selectedProducts.has("shorts")) {
+    columns.push({ ...COLUMN_META.price_shorts, default: priceShorts });
+  }
+  if (selectedProducts.has("socks")) {
+    columns.push({ ...COLUMN_META.price_socks, default: priceSocks });
+  }
+  if (selectedProducts.has("caps")) {
+    columns.push({ ...COLUMN_META.price_caps, default: priceCaps });
+  }
+
+  columns.push({
+    ...COLUMN_META.total_price,
+    priceJersey,
+    jerseyPricingMode,
+    priceShorts,
+    priceSocks,
+    priceCaps
+  });
+
+  return columns;
 }
 
 async function loadOrders() {
@@ -291,33 +565,6 @@ async function loadOrders() {
     factoryBtn.target = "_blank";
     actions.appendChild(factoryBtn);
 
-    const editBtn = document.createElement("button");
-    editBtn.className = "mini-btn";
-    editBtn.textContent = "Edit";
-    editBtn.addEventListener("click", () => {
-      openEditOrder(order.slug);
-    });
-    actions.appendChild(editBtn);
-
-    const delBtn = document.createElement("button");
-    delBtn.className = "mini-btn";
-    delBtn.textContent = "Delete";
-    delBtn.addEventListener("click", async () => {
-      if (!confirm(`Delete order ${order.slug}? This cannot be undone.`)) return;
-      const res = await fetch(`/api/orders/${order.slug}`, { method: "DELETE" });
-      if (res.status === 401) {
-        window.location.href = "/";
-        return;
-      }
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok) {
-        alert(data.error || "Error deleting order");
-        return;
-      }
-      loadOrders();
-    });
-    actions.appendChild(delBtn);
-
     item.appendChild(actions);
     list.appendChild(item);
   });
@@ -329,28 +576,42 @@ form.addEventListener("submit", async (e) => {
   e.preventDefault();
   resultEl.textContent = "";
 
-  const formData = new FormData(form);
-  const payload = Object.fromEntries(formData.entries());
-  const columns = Array.from(form.querySelectorAll("input[name=\"columns\"]:checked")).map(
-    (el) => el.value
-  );
-  payload.columnsKeys = columns;
-  payload.unitPcsLabel = payload.unitPcsLabel || "pcs";
-  payload.unitCurrencyLabel = payload.unitCurrencyLabel || "EUR";
-  payload.rowsCount = Number(payload.rowsCount || 20);
-  payload.priceJersey = Number(payload.priceJersey || 21.9);
-  payload.priceShorts = Number(payload.priceShorts || 7.7);
-  payload.priceSocks = Number(payload.priceSocks || 0);
-
-  const colors = Array.from(form.querySelectorAll("input[name=\"colorOptions\"]:checked")).map((el) => el.value);
-  payload.colorOptions = colors;
-  
-  payload.language = payload.language || "ENG";
-  payload.sport = payload.sport || "Football";
-  if (columns.length === 0) {
-    resultEl.textContent = "Select at least one column";
+  const selectedProducts = Array.from(form.querySelectorAll('input[name="products"]:checked'));
+  if (selectedProducts.length === 0) {
+    resultEl.textContent = "Select at least one product";
     return;
   }
+
+  const formData = new FormData(form);
+  const payload = Object.fromEntries(formData.entries());
+  payload.jerseyPricingMode = payload.jerseyPricingMode || getDefaultJerseyPricingMode();
+
+  const readPrice = (name) => {
+    const meta = PRICE_FIELD_META[name];
+    const raw = payload[name];
+    if (typeof raw === "undefined" || raw === "") {
+      if (name === "priceJersey") return getJerseyPriceByMode(payload.jerseyPricingMode);
+      return meta ? Number(meta.defaultValue) : 0;
+    }
+    return Number(raw);
+  };
+
+  payload.rowsCount = Number(payload.rowsCount || 20);
+  payload.priceJersey = readPrice("priceJersey");
+  payload.priceShorts = readPrice("priceShorts");
+  payload.priceSocks = readPrice("priceSocks");
+  payload.priceCaps = readPrice("priceCaps");
+
+  const customColumns = buildCustomColumns({
+    jerseyPricingMode: payload.jerseyPricingMode,
+    priceJersey: payload.priceJersey,
+    priceShorts: payload.priceShorts,
+    priceSocks: payload.priceSocks,
+    priceCaps: payload.priceCaps
+  });
+
+  payload.columnsKeys = customColumns.map((col) => col.key);
+  payload.customColumns = customColumns;
 
   const res = await fetch("/api/orders", {
     method: "POST",
@@ -371,140 +632,22 @@ form.addEventListener("submit", async (e) => {
 
   resultEl.innerHTML = `Created: <a href="/orders/${data.slug}">/orders/${data.slug}</a>`;
   form.reset();
+  productsContainer.innerHTML = "";
+  pricingFields.innerHTML = "";
+  setStepEnabled(productsStep, false);
+  setStepEnabled(pricingStep, false);
   loadOrders();
 });
 
-const editForm = document.getElementById("edit-form");
-const editResultEl = document.getElementById("edit-result");
-const editSection = document.getElementById("edit-section");
-
-function updateEditColorOptionsVisibility() {
-  const colorCheckbox = editForm.querySelector("input[name=\"columns\"][value=\"jersey_color\"]");
-  const el = document.getElementById("edit-color-options");
-  if (!el || !colorCheckbox) return;
-  el.style.display = colorCheckbox.checked ? "block" : "none";
-}
-
-async function openEditOrder(slug) {
-  const res = await fetch(`/api/orders/${slug}`);
-  if (!res.ok) {
-    alert("Failed to load order");
-    return;
-  }
-  const order = await res.json();
-  
-  // Set slug
-  document.getElementById("edit-slug").value = slug;
-  
-  // Load columns from order.columns
-  const columnKeys = new Set(order.columns.map(col => col.key));
-  editForm.querySelectorAll("input[name=\"columns\"]").forEach(checkbox => {
-    checkbox.checked = columnKeys.has(checkbox.value);
-  });
-  
-  // Clear custom colors from previous order
-  const container = document.getElementById("edit-color-options-container");
-  const defaultColors = ["Red", "Blue", "White", "Yellow", "Black", "Green", "Orange", "Purple", "Pink", "Gray"];
-  const customLabels = Array.from(container.querySelectorAll("label")).filter(label => {
-    const text = label.textContent.trim();
-    return !defaultColors.includes(text);
-  });
-  customLabels.forEach(label => label.remove());
-  
-  // Load color options from config
-  const colorOptions = order.config?.colorOptions || [];
-  editForm.querySelectorAll("input[name=\"colorOptions\"]").forEach(checkbox => {
-    checkbox.checked = colorOptions.includes(checkbox.value);
-  });
-  
-  // Add custom colors from this order
-  colorOptions.forEach(color => {
-    if (!defaultColors.includes(color)) {
-      addCustomColorCheckbox("edit-color-options-container", color, true);
-    }
-  });
-  
-  // Load prices
-  const priceJerseyCol = order.columns.find(col => col.key === "price_jersey");
-  const priceShortsCol = order.columns.find(col => col.key === "price_shorts");
-  const priceSocksCol = order.columns.find(col => col.key === "price_socks");
-  
-  document.querySelector("#edit-form input[name=\"priceJersey\"]").value = priceJerseyCol?.default || "";
-  document.querySelector("#edit-form input[name=\"priceShorts\"]").value = priceShortsCol?.default || "";
-  document.querySelector("#edit-form input[name=\"priceSocks\"]").value = priceSocksCol?.default || "";
-  
-  // Load units
-  const unitPcsLabel = order.unitLabels?.pcs || "pcs";
-  const unitCurrencyLabel = order.unitLabels?.currency || "EUR";
-  document.getElementById("edit-unitPcsLabel").value = unitPcsLabel;
-  document.getElementById("edit-unitCurrencyLabel").value = unitCurrencyLabel;
-  
-  // Show edit section
-  editSection.style.display = "block";
-  updateEditColorOptionsVisibility();
-  
-  // Scroll to edit section
-  editSection.scrollIntoView({ behavior: "smooth" });
-}
-
-function closeEditOrder() {
-  editSection.style.display = "none";
-  editResultEl.textContent = "";
-  editForm.reset();
-}
-
-editForm.addEventListener("submit", async (e) => {
-  e.preventDefault();
-  editResultEl.textContent = "";
-  
-  const slug = document.getElementById("edit-slug").value;
-  if (!slug) {
-    editResultEl.textContent = "Error: no slug";
-    return;
-  }
-  
-  const columns = Array.from(editForm.querySelectorAll("input[name=\"columns\"]:checked")).map(el => el.value);
-  const colors = Array.from(editForm.querySelectorAll("input[name=\"colorOptions\"]:checked")).map(el => el.value);
-  
-  const payload = {
-    columnsKeys: columns,
-    colorOptions: colors,
-    priceJersey: Number(document.querySelector("#edit-form input[name=\"priceJersey\"]").value || 0),
-    priceShorts: Number(document.querySelector("#edit-form input[name=\"priceShorts\"]").value || 0),
-    priceSocks: Number(document.querySelector("#edit-form input[name=\"priceSocks\"]").value || 0),
-    unitPcsLabel: document.getElementById("edit-unitPcsLabel").value,
-    unitCurrencyLabel: document.getElementById("edit-unitCurrencyLabel").value
-  };
-  
-  const res = await fetch(`/api/orders/${slug}`, {
-    method: "PATCH",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload)
-  });
-  
-  if (res.status === 401) {
-    window.location.href = "/";
-    return;
-  }
-  
-  const data = await res.json();
-  if (!res.ok) {
-    editResultEl.textContent = data.error || "Error";
-    return;
-  }
-  
-  editResultEl.textContent = "Order updated successfully";
-  setTimeout(() => closeEditOrder(), 1500);
-  loadOrders();
+languageSelect.addEventListener("change", () => {
+  renderProducts();
+  updateProgressiveVisibility();
+});
+sportSelect.addEventListener("change", () => {
+  renderProducts();
+  updateProgressiveVisibility();
 });
 
-editForm.addEventListener("change", (e) => {
-  if (!e.target) return;
-  if (e.target.name === "columns") {
-    updateEditColorOptionsVisibility();
-  }
-});
-
-document.getElementById("cancel-edit").addEventListener("click", closeEditOrder);
-
+setStepEnabled(productsStep, false);
+setStepEnabled(pricingStep, false);
 loadOrders();

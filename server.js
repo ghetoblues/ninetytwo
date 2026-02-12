@@ -8,11 +8,7 @@ const {
   addRow,
   updateRow,
   deleteRow,
-  listOrders,
-  deleteOrder,
-  updateOrderConfig,
-  updateOrderSettings,
-  updateOrderWithFullConfig
+  listOrders
 } = require("./db");
 
 const app = express();
@@ -23,187 +19,241 @@ const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "admin";
 app.use(express.json({ limit: "1mb" }));
 app.use(express.static(path.join(__dirname, "public"), { index: false }));
 
-const translations = {
-  ENG: {
-    SURNAME: "SURNAME",
-    NUMBER: "PLAYER NUMBER",
-    HEIGHT: "HEIGHT",
-    WEIGHT: "WEIGHT",
-    JERSEY_SIZE: "JERSEY SIZE",
-    SHORTS_SIZE: "SHORTS SIZE",
-    SOCKS_SIZE: "SOCKS SIZE",
-    TYPE: "TYPE",
-    JERSEY_COLOR: "JERSEY COLOR",
-    SOCKS_COLOR: "SOCKS COLOR",
-    DESTINATION: "DESTINATION",
-    QTY_JERSEY: "QUANTITY JERSEY",
-    QTY_SHORTS: "QUANTITY SHORTS",
-    QTY_SOCKS: "QUANTITY SOCKS",
-    PRICE_JERSEY: "JERSEY PRICE",
-    PRICE_SHORTS: "SHORTS PRICE",
-    PRICE_SOCKS: "SOCKS PRICE",
-    TOTAL_PRICE: "TOTAL PRICE"
-  },
-  RUS: {
-    SURNAME: "ФАМИЛИЯ",
-    NUMBER: "НОМЕР ИГРОКА",
-    HEIGHT: "РОСТ",
-    WEIGHT: "ВЕС",
-    JERSEY_SIZE: "РАЗМЕР МАЙКИ",
-    SHORTS_SIZE: "РАЗМЕР ШОРТ",
-    SOCKS_SIZE: "РАЗМЕР НОСКОВ",
-    TYPE: "ТИП",
-    JERSEY_COLOR: "ЦВЕТ МАЙКИ",
-    SOCKS_COLOR: "ЦВЕТ НОСКОВ",
-    DESTINATION: "НАЗНАЧЕНИЕ",
-    QTY_JERSEY: "КОЛ-ВО МАЕК",
-    QTY_SHORTS: "КОЛ-ВО ШОРТ",
-    QTY_SOCKS: "КОЛ-ВО НОСКОВ",
-    PRICE_JERSEY: "ЦЕНА МАЙКИ",
-    PRICE_SHORTS: "ЦЕНА ШОРТ",
-    PRICE_SOCKS: "ЦЕНА НОСКОВ",
-    TOTAL_PRICE: "ИТОГО"
-  }
-};
-
-const colorTranslations = {
-  ENG: {
-    Red: "Red",
-    Blue: "Blue",
-    White: "White",
-    Yellow: "Yellow",
-    Black: "Black",
-    Green: "Green",
-    Orange: "Orange",
-    Purple: "Purple",
-    Pink: "Pink",
-    Gray: "Gray"
-  },
-  RUS: {
-    Red: "Красный",
-    Blue: "Синий",
-    White: "Белый",
-    Yellow: "Жёлтый",
-    Black: "Чёрный",
-    Green: "Зелёный",
-    Orange: "Оранжевый",
-    Purple: "Фиолетовый",
-    Pink: "Розовый",
-    Gray: "Серый"
-  }
-};
-
-function getLabel(key, language = "ENG") {
-  const lang = translations[language] || translations.ENG;
-  return lang[key] || key;
-}
-
-function getColorLabel(color, language = "ENG") {
-  const lang = colorTranslations[language] || colorTranslations.ENG;
-  return lang[color] || color;
-}
-
-function baseColumns({ priceJersey, priceShorts, priceSocks, colorOptions, sport, language = "ENG" }) {
-  // default football sizes
-  let sizeOptions = ["XS", "S", "M", "L", "XL", "2XL", "3XL", "4XL", "5XL"];
-  if (sport === "Hockey") {
-    sizeOptions = [
-      "110",
-      "120",
-      "130",
-      "140",
-      "150",
-      "160/M",
-      "170/L",
-      "180/XL",
-      "190/XXL",
-      "190/3XL",
-      "GOALIE S",
-      "GOALIE M",
-      "GOALIE L",
-      "GOALIE 3XL"
-    ];
-  }
-
-  const colorOpts = Array.isArray(colorOptions) && colorOptions.length > 0 ? colorOptions : ["Blue", "Yellow"];
-
+function baseColumns({
+  priceJersey,
+  priceJerseySublimated,
+  priceJerseyEmbroidered,
+  priceJerseyComplex,
+  priceShorts,
+  priceSocks,
+  priceCaps
+}) {
   return [
-    { key: "name", label: getLabel("SURNAME", language), type: "text" },
-    { key: "number", label: getLabel("NUMBER", language), type: "text" },
-    { key: "height_cm", label: getLabel("HEIGHT", language), type: "number" },
-    { key: "weight_kg", label: getLabel("WEIGHT", language), type: "number" },
+    { key: "name", label: "SURNAME", type: "text" },
+    { key: "number", label: "NUMBER", type: "text" },
+    { key: "cap", label: "CAP", type: "text" },
+    { key: "height_cm", label: "HEIGHT", type: "number" },
+    { key: "weight_kg", label: "WEIGHT", type: "number" },
     {
       key: "size",
-      label: getLabel("JERSEY_SIZE", language),
+      label: "JERSEY SIZE",
       type: "select",
-      options: sizeOptions
+      options: ["XS", "S", "M", "L", "XL", "2XL", "3XL", "4XL", "5XL"]
     },
     {
       key: "size_shorts",
-      label: getLabel("SHORTS_SIZE", language),
+      label: "SHORTS SIZE",
       type: "select",
-      options: sizeOptions
+      options: ["XS", "S", "M", "L", "XL", "2XL", "3XL", "4XL", "5XL"]
     },
     {
       key: "size_socks",
-      label: getLabel("SOCKS_SIZE", language),
+      label: "SOCKS SIZE",
       type: "select",
-      options: sizeOptions
+      options: ["XS", "S", "M", "L", "XL", "2XL", "3XL", "4XL", "5XL"]
     },
     {
       key: "type",
-      label: getLabel("TYPE", language),
+      label: "TYPE",
       type: "select",
       options: ["Long", "Short"]
     },
     {
-      key: "jersey_color",
-      label: getLabel("JERSEY_COLOR", language),
+      key: "jersey_method",
+      label: "JERSEY METHOD",
       type: "select",
-      options: colorOpts.map(c => ({ value: c, label: getColorLabel(c, language) }))
+      options: ["Sublimated", "Embroidered", "Complex"]
     },
     {
-      key: "socks_color",
-      label: getLabel("SOCKS_COLOR", language),
+      key: "color",
+      label: "COLOR",
       type: "select",
-      options: colorOpts.map(c => ({ value: c, label: getColorLabel(c, language) }))
+      options: ["Blue", "Yellow"]
     },
-    { key: "destination", label: getLabel("DESTINATION", language), type: "text" },
-    { key: "qty_jersey", label: getLabel("QTY_JERSEY", language), type: "number" },
-    { key: "qty_shorts", label: getLabel("QTY_SHORTS", language), type: "number" },
-    { key: "qty_socks", label: getLabel("QTY_SOCKS", language), type: "number" },
+    {
+      key: "style_cap",
+      label: "STYLE",
+      type: "select",
+      options: ["6 panel cap", "trucker cap with a mesh at the backside"]
+    },
+    {
+      key: "logo_cap",
+      label: "LOGO",
+      type: "select",
+      options: ["Embroidery", "Print", "Patch"]
+    },
+    {
+      key: "visor_cap",
+      label: "VISOR",
+      type: "select",
+      options: ["Curved visor", "Flat visor"]
+    },
+    {
+      key: "fastener_cap",
+      label: "FASTENER",
+      type: "select",
+      options: ["plastic snap closure", "metal buckle", "velcro"]
+    },
+    {
+      key: "size_cap",
+      label: "SIZE",
+      type: "select",
+      options: ["Adult", "Youth", "Kids"]
+    },
+    { key: "destination", label: "DESTINATION", type: "text" },
+    { key: "qty_jersey", label: "QUANTITY JERSEY", type: "number" },
+    { key: "qty_shorts", label: "QUANTITY SHORTS", type: "number" },
+    { key: "qty_socks", label: "QUANTITY SOCKS", type: "number" },
+    { key: "qty_caps", label: "QUANTITY CAPS", type: "number" },
     {
       key: "price_jersey",
-      label: getLabel("PRICE_JERSEY", language),
+      label: "JERSEY PRICE",
       type: "fixed",
       default: priceJersey
     },
     {
+      key: "price_jersey_sublimated",
+      label: "JERSEY SUBLIMATED PRICE",
+      type: "fixed",
+      default: priceJerseySublimated
+    },
+    {
+      key: "price_jersey_embroidered",
+      label: "JERSEY EMBROIDERED PRICE",
+      type: "fixed",
+      default: priceJerseyEmbroidered
+    },
+    {
+      key: "price_jersey_complex",
+      label: "JERSEY COMPLEX PRICE",
+      type: "fixed",
+      default: priceJerseyComplex
+    },
+    {
       key: "price_shorts",
-      label: getLabel("PRICE_SHORTS", language),
+      label: "SHORTS PRICE",
       type: "fixed",
       default: priceShorts
     },
     {
       key: "price_socks",
-      label: getLabel("PRICE_SOCKS", language),
+      label: "SOCKS PRICE",
       type: "fixed",
       default: priceSocks
     },
     {
+      key: "price_caps",
+      label: "CAPS PRICE",
+      type: "fixed",
+      default: priceCaps
+    },
+    {
       key: "total_price",
-      label: getLabel("TOTAL_PRICE", language),
+      label: "TOTAL PRICE",
       type: "formula",
-      formula: "qty_jersey*price_jersey + qty_shorts*price_shorts + qty_socks*price_socks"
+      formula:
+        "qty_jersey*price_jersey_complex + qty_shorts*price_shorts + qty_socks*price_socks + qty_caps*price_caps"
     }
   ];
 }
 
-function buildOrderColumns({ priceJersey, priceShorts, priceSocks, columnsKeys, colorOptions, sport, language = "ENG" }) {
-  const all = baseColumns({ priceJersey, priceShorts, priceSocks, colorOptions, sport, language });
+function fcPolakoColumns({
+  priceJersey,
+  priceJerseySublimated,
+  priceJerseyEmbroidered,
+  priceJerseyComplex,
+  priceShorts,
+  priceSocks,
+  priceCaps,
+  columnsKeys
+}) {
+  const all = baseColumns({
+    priceJersey,
+    priceJerseySublimated,
+    priceJerseyEmbroidered,
+    priceJerseyComplex,
+    priceShorts,
+    priceSocks,
+    priceCaps
+  });
   if (!Array.isArray(columnsKeys) || columnsKeys.length === 0) return all;
   const allowed = new Set(columnsKeys);
   return all.filter((col) => allowed.has(col.key));
+}
+
+function applyCustomColumns({
+  priceJersey,
+  priceJerseySublimated,
+  priceJerseyEmbroidered,
+  priceJerseyComplex,
+  priceShorts,
+  priceSocks,
+  priceCaps,
+  customColumns
+}) {
+  const all = baseColumns({
+    priceJersey,
+    priceJerseySublimated,
+    priceJerseyEmbroidered,
+    priceJerseyComplex,
+    priceShorts,
+    priceSocks,
+    priceCaps
+  });
+  const byKey = new Map(all.map((col) => [col.key, col]));
+  if (!Array.isArray(customColumns) || customColumns.length === 0) return null;
+
+  const next = [];
+  customColumns.forEach((item) => {
+    if (!item || typeof item !== "object" || typeof item.key !== "string") return;
+    const base = byKey.get(item.key);
+    if (!base) return;
+
+    const col = { ...base };
+    if (typeof item.label === "string" && item.label.trim()) {
+      col.label = item.label.trim();
+    }
+    if (col.type === "select" && Array.isArray(item.options)) {
+      const options = item.options
+        .map((v) => (typeof v === "string" ? v.trim() : ""))
+        .filter(Boolean);
+      if (options.length > 0) {
+        col.options = Array.from(new Set(options));
+      }
+    }
+    if (col.type === "fixed" && Number.isFinite(Number(item.default))) {
+      col.default = Number(item.default);
+    }
+    if (col.type === "formula") {
+      col.priceJersey = Number.isFinite(Number(item.priceJersey))
+        ? Number(item.priceJersey)
+        : priceJersey;
+      col.priceJerseySublimated = Number.isFinite(Number(item.priceJerseySublimated))
+        ? Number(item.priceJerseySublimated)
+        : priceJerseySublimated;
+      col.priceJerseyEmbroidered = Number.isFinite(Number(item.priceJerseyEmbroidered))
+        ? Number(item.priceJerseyEmbroidered)
+        : priceJerseyEmbroidered;
+      col.priceJerseyComplex = Number.isFinite(Number(item.priceJerseyComplex))
+        ? Number(item.priceJerseyComplex)
+        : priceJerseyComplex;
+      col.priceShorts = Number.isFinite(Number(item.priceShorts))
+        ? Number(item.priceShorts)
+        : priceShorts;
+      col.priceSocks = Number.isFinite(Number(item.priceSocks))
+        ? Number(item.priceSocks)
+        : priceSocks;
+      col.priceCaps = Number.isFinite(Number(item.priceCaps))
+        ? Number(item.priceCaps)
+        : priceCaps;
+      if (typeof item.jerseyPricingMode === "string" && item.jerseyPricingMode.trim()) {
+        col.jerseyPricingMode = item.jerseyPricingMode.trim();
+      }
+    }
+    next.push(col);
+  });
+
+  return next.length > 0 ? next : null;
 }
 
 function parseCookies(req) {
@@ -253,21 +303,44 @@ app.post("/api/orders", requireAdmin, async (req, res) => {
     title,
     rowsCount = 20,
     priceJersey = 21.9,
+    priceJerseySublimated = 35,
+    priceJerseyEmbroidered = 72,
+    priceJerseyComplex = 82,
     priceShorts = 7.7,
     priceSocks = 0,
+    priceCaps = 0,
     columnsKeys = [],
+    customColumns = [],
     unitPcsLabel = "pcs",
     unitCurrencyLabel = "EUR"
   } = req.body || {};
-
-  const { sport = "Football", colorOptions = [], language = "ENG" } = req.body || {};
 
   if (!slug || !title) {
     res.status(400).json({ error: "slug and title are required" });
     return;
   }
 
-  const columns = buildOrderColumns({ priceJersey, priceShorts, priceSocks, columnsKeys, colorOptions, sport, language });
+  const columns =
+    applyCustomColumns({
+      priceJersey,
+      priceJerseySublimated,
+      priceJerseyEmbroidered,
+      priceJerseyComplex,
+      priceShorts,
+      priceSocks,
+      priceCaps,
+      customColumns
+    }) ||
+    fcPolakoColumns({
+      priceJersey,
+      priceJerseySublimated,
+      priceJerseyEmbroidered,
+      priceJerseyComplex,
+      priceShorts,
+      priceSocks,
+      priceCaps,
+      columnsKeys
+    });
 
   try {
     await createOrder({
@@ -276,108 +349,13 @@ app.post("/api/orders", requireAdmin, async (req, res) => {
       columns,
       rowsCount,
       unitPcsLabel,
-      unitCurrencyLabel,
-      config: { sport, colorOptions, language }
+      unitCurrencyLabel
     });
     res.json({ ok: true, slug });
   } catch (err) {
     res.status(400).json({ error: err.message });
   }
 });
-
-app.delete("/api/orders/:slug", requireAdmin, async (req, res) => {
-  const order = await getOrderBySlug(req.params.slug);
-  if (!order) {
-    res.status(404).json({ error: "Order not found" });
-    return;
-  }
-  const ok = await deleteOrder(order.id);
-  if (!ok) {
-    res.status(500).json({ error: "Failed to delete order" });
-    return;
-  }
-  res.json({ ok: true });
-});
-
-app.patch("/api/orders/:slug", requireAdmin, async (req, res) => {
-  const order = await getOrderBySlug(req.params.slug);
-  if (!order) {
-    res.status(404).json({ error: "Order not found" });
-    return;
-  }
-  
-  const {
-    columnsKeys,
-    colorOptions,
-    priceJersey,
-    priceShorts,
-    priceSocks,
-    unitPcsLabel,
-    unitCurrencyLabel
-  } = req.body || {};
-  
-  // Get current config to preserve sport
-  const sport = order.config?.sport || "Football";
-  const updatedConfig = { ...order.config, sport };
-  if (colorOptions !== undefined) {
-    updatedConfig.colorOptions = colorOptions;
-  }
-  
-  let newColumns = order.columns;
-  if (columnsKeys !== undefined && Array.isArray(columnsKeys)) {
-    // Rebuild columns from scratch
-    const baseColsResult = baseColumns({
-      priceJersey: priceJersey !== undefined ? Number(priceJersey) : getPriceFromColumns(order.columns, "price_jersey"),
-      priceShorts: priceShorts !== undefined ? Number(priceShorts) : getPriceFromColumns(order.columns, "price_shorts"),
-      priceSocks: priceSocks !== undefined ? Number(priceSocks) : getPriceFromColumns(order.columns, "price_socks"),
-      colorOptions: colorOptions || updatedConfig.colorOptions || [],
-      sport
-    });
-    
-    const allowed = new Set(columnsKeys);
-    newColumns = baseColsResult.filter((col) => allowed.has(col.key));
-  } else if (priceJersey !== undefined || priceShorts !== undefined || priceSocks !== undefined) {
-    // Just update prices in existing columns
-    newColumns = order.columns.map((col) => {
-      const copy = { ...col };
-      if (col.key === "price_jersey" && priceJersey !== undefined) copy.default = Number(priceJersey);
-      if (col.key === "price_shorts" && priceShorts !== undefined) copy.default = Number(priceShorts);
-      if (col.key === "price_socks" && priceSocks !== undefined) copy.default = Number(priceSocks);
-      return copy;
-    });
-  }
-  
-  // If colorOptions changed, update the color column options
-  if (colorOptions !== undefined && colorOptions.length > 0) {
-    newColumns = newColumns.map((col) => {
-      if (col.key === "color") {
-        return {
-          ...col,
-          options: colorOptions.map(c => ({ value: c, label: getColorLabel(c, order.config?.language || "ENG") }))
-        };
-      }
-      return col;
-    });
-  }
-  
-  const ok = await updateOrderWithFullConfig(order.id, {
-    columns: newColumns,
-    config: updatedConfig,
-    unitPcsLabel: (unitPcsLabel && String(unitPcsLabel).trim()) || order.unitLabels.pcs,
-    unitCurrencyLabel: (unitCurrencyLabel && String(unitCurrencyLabel).trim()) || order.unitLabels.currency
-  });
-  
-  if (!ok) {
-    res.status(500).json({ error: "Failed to update order" });
-    return;
-  }
-  res.json({ ok: true });
-});
-
-function getPriceFromColumns(columns, priceKey) {
-  const col = columns.find(c => c.key === priceKey);
-  return col?.default || 0;
-}
 
 app.get("/api/orders/:slug", async (req, res) => {
   const order = await getOrderBySlug(req.params.slug);
