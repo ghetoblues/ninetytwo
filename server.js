@@ -9,7 +9,8 @@ const {
   updateRow,
   deleteRow,
   listOrders,
-  deleteOrder
+  deleteOrder,
+  updateOrderWithFullConfig
 } = require("./db");
 
 const app = express();
@@ -369,6 +370,133 @@ app.delete("/api/orders/:slug", requireAdmin, async (req, res) => {
     res.status(404).json({ error: "Order not found" });
     return;
   }
+  res.json({ ok: true });
+});
+
+app.patch("/api/orders/:slug", requireAdmin, async (req, res) => {
+  const order = await getOrderBySlug(req.params.slug);
+  if (!order) {
+    res.status(404).json({ error: "Order not found" });
+    return;
+  }
+
+  const {
+    title,
+    unitPcsLabel,
+    unitCurrencyLabel,
+    sport,
+    language,
+    columnsKeys,
+    customColumns,
+    priceJersey,
+    priceJerseySublimated,
+    priceJerseyEmbroidered,
+    priceJerseyComplex,
+    priceShorts,
+    priceSocks,
+    priceCaps
+  } = req.body || {};
+
+  const getPriceFromColumns = (key, fallback = 0) => {
+    const col = (order.columns || []).find((item) => item.key === key);
+    return Number.isFinite(Number(col && col.default)) ? Number(col.default) : fallback;
+  };
+
+  const nextPriceJersey = Number.isFinite(Number(priceJersey))
+    ? Number(priceJersey)
+    : getPriceFromColumns("price_jersey", 22);
+  const nextPriceJerseySublimated = Number.isFinite(Number(priceJerseySublimated))
+    ? Number(priceJerseySublimated)
+    : getPriceFromColumns("price_jersey_sublimated", 35);
+  const nextPriceJerseyEmbroidered = Number.isFinite(Number(priceJerseyEmbroidered))
+    ? Number(priceJerseyEmbroidered)
+    : getPriceFromColumns("price_jersey_embroidered", 72);
+  const nextPriceJerseyComplex = Number.isFinite(Number(priceJerseyComplex))
+    ? Number(priceJerseyComplex)
+    : getPriceFromColumns("price_jersey_complex", 82);
+  const nextPriceShorts = Number.isFinite(Number(priceShorts))
+    ? Number(priceShorts)
+    : getPriceFromColumns("price_shorts", 7.7);
+  const nextPriceSocks = Number.isFinite(Number(priceSocks))
+    ? Number(priceSocks)
+    : getPriceFromColumns("price_socks", 0);
+  const nextPriceCaps = Number.isFinite(Number(priceCaps))
+    ? Number(priceCaps)
+    : getPriceFromColumns("price_caps", 0);
+
+  const rebuiltColumns =
+    applyCustomColumns({
+      priceJersey: nextPriceJersey,
+      priceJerseySublimated: nextPriceJerseySublimated,
+      priceJerseyEmbroidered: nextPriceJerseyEmbroidered,
+      priceJerseyComplex: nextPriceJerseyComplex,
+      priceShorts: nextPriceShorts,
+      priceSocks: nextPriceSocks,
+      priceCaps: nextPriceCaps,
+      customColumns
+    }) ||
+    (Array.isArray(columnsKeys) && columnsKeys.length > 0
+      ? fcPolakoColumns({
+          priceJersey: nextPriceJersey,
+          priceJerseySublimated: nextPriceJerseySublimated,
+          priceJerseyEmbroidered: nextPriceJerseyEmbroidered,
+          priceJerseyComplex: nextPriceJerseyComplex,
+          priceShorts: nextPriceShorts,
+          priceSocks: nextPriceSocks,
+          priceCaps: nextPriceCaps,
+          columnsKeys
+        })
+      : null);
+
+  const nextColumns =
+    rebuiltColumns ||
+    (order.columns || []).map((col) => {
+      const next = { ...col };
+      if (col.key === "price_jersey") next.default = nextPriceJersey;
+      if (col.key === "price_shorts") next.default = nextPriceShorts;
+      if (col.key === "price_socks") next.default = nextPriceSocks;
+      if (col.key === "price_caps") next.default = nextPriceCaps;
+      if (col.key === "total_price") {
+        next.priceJersey = nextPriceJersey;
+        next.priceShorts = nextPriceShorts;
+        next.priceSocks = nextPriceSocks;
+        next.priceCaps = nextPriceCaps;
+      }
+      return next;
+    });
+
+  const nextConfig = {
+    ...(order.config || {}),
+    sport:
+      typeof sport === "string" && sport.trim().length > 0
+        ? sport.trim()
+        : order.config && order.config.sport,
+    language:
+      typeof language === "string" && language.trim().length > 0
+        ? language.trim()
+        : order.config && order.config.language
+  };
+
+  const ok = await updateOrderWithFullConfig(order.id, {
+    title:
+      typeof title === "string" && title.trim().length > 0 ? title.trim() : order.title,
+    columns: nextColumns,
+    config: nextConfig,
+    unitPcsLabel:
+      typeof unitPcsLabel === "string" && unitPcsLabel.trim().length > 0
+        ? unitPcsLabel
+        : order.unitLabels.pcs,
+    unitCurrencyLabel:
+      typeof unitCurrencyLabel === "string" && unitCurrencyLabel.trim().length > 0
+        ? unitCurrencyLabel
+        : order.unitLabels.currency
+  });
+
+  if (!ok) {
+    res.status(500).json({ error: "Failed to update order" });
+    return;
+  }
+
   res.json({ ok: true });
 });
 

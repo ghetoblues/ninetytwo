@@ -95,6 +95,74 @@
         </form>
         <div id="create-result" class="result"></div>
       </section>
+
+      <section class="admin-card" id="edit-section" style="display: none">
+        <h2>Edit order</h2>
+        <form id="edit-form" class="form">
+          <input type="hidden" id="edit-slug" />
+          <fieldset class="step-fieldset">
+            <legend>1. Order information</legend>
+            <div class="step-grid">
+              <label>
+                Title
+                <input type="text" id="edit-title" required />
+              </label>
+              <label>
+                Language
+                <select id="edit-language" required>
+                  <option value="">Select language</option>
+                  <option value="en">English</option>
+                  <option value="ru">Russian</option>
+                  <option value="sr">Serbian</option>
+                </select>
+              </label>
+              <label>
+                Sport
+                <select id="edit-sport" required>
+                  <option value="">Select sport</option>
+                  <option value="hockey">Hockey</option>
+                  <option value="football">Football</option>
+                  <option value="other">Other</option>
+                </select>
+              </label>
+            </div>
+          </fieldset>
+
+          <fieldset id="edit-products-step" class="step-fieldset is-locked" disabled>
+            <legend>2. Products</legend>
+            <div id="edit-products-container" class="products-grid"></div>
+          </fieldset>
+
+          <fieldset id="edit-pricing-step" class="step-fieldset is-locked" disabled>
+            <legend>3. Prices and units</legend>
+            <div class="step-grid">
+              <label>
+                pcs unit
+                <select id="edit-unit-pcs">
+                  <option value="pcs">pcs</option>
+                  <option value="шт">шт</option>
+                </select>
+              </label>
+              <label>
+                currency unit
+                <select id="edit-unit-currency">
+                  <option value="EUR">EUR</option>
+                  <option value="RSD">RSD</option>
+                  <option value="RUB">RUB</option>
+                  <option value="USD">USD</option>
+                </select>
+              </label>
+            </div>
+            <div id="edit-pricing-fields" class="step-grid"></div>
+          </fieldset>
+
+          <div class="order-actions">
+            <button class="btn" type="submit">Update</button>
+            <button class="mini-btn" type="button" id="cancel-edit">Cancel</button>
+          </div>
+        </form>
+        <div id="edit-result" class="result"></div>
+      </section>
     </div>
 
     <script src="/admin.js?v=20260218-3"></script>

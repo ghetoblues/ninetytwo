@@ -389,8 +389,9 @@ function getPdfStyles() {
         background: #f4f8f2;
       }
       .total-word {
-        letter-spacing: 0.28em;
+        letter-spacing: 0.08em;
         white-space: nowrap;
+        font-weight: 700;
       }
       .note {
         margin-top: 16px;
@@ -787,14 +788,22 @@ function renderTable() {
   const tfoot = document.createElement("tfoot");
   const totalRow = document.createElement("tr");
   totalRow.className = "footer-row";
+  const totalIndexCell = document.createElement("td");
+  totalIndexCell.className = "sticky-col sticky-0 col-index";
+  totalIndexCell.textContent = "";
+  totalRow.appendChild(totalIndexCell);
+
   const totalLabel = document.createElement("td");
-  totalLabel.className = "total-word";
+  totalLabel.className = "total-word sticky-col sticky-1";
   totalLabel.textContent = "TOTAL";
   totalRow.appendChild(totalLabel);
 
-  order.columns.forEach((col) => {
+  order.columns.slice(1).forEach((col, colIndex) => {
     const td = document.createElement("td");
     td.dataset.key = col.key;
+    if (colIndex === 0) {
+      td.classList.add("sticky-col", "sticky-2");
+    }
     if (col.key.startsWith("qty_")) {
       td.textContent = sumColumn(col.key).toString();
     } else if (col.key === "total_price") {

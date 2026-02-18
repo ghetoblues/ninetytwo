@@ -206,12 +206,16 @@ async function updateOrderSettings(orderId, { priceJersey, priceShorts, priceSoc
   return res.rowCount > 0;
 }
 
-async function updateOrderWithFullConfig(orderId, { columns, config, unitPcsLabel, unitCurrencyLabel }) {
+async function updateOrderWithFullConfig(
+  orderId,
+  { title, columns, config, unitPcsLabel, unitCurrencyLabel }
+) {
   const res = await pool.query(
     `UPDATE orders 
-     SET columns_json = $1, config_json = $2, unit_pcs_label = $3, unit_currency_label = $4
-     WHERE id = $5`,
+     SET title = $1, columns_json = $2, config_json = $3, unit_pcs_label = $4, unit_currency_label = $5
+     WHERE id = $6`,
     [
+      title,
       JSON.stringify(columns),
       JSON.stringify(config || {}),
       unitPcsLabel,
