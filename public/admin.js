@@ -316,10 +316,32 @@ function updateProgressiveVisibility() {
   renderPricingFields();
 }
 
-function createOptionGroup(paramKey, options) {
+function createOptionCheckbox(list, value) {
+  const label = document.createElement("label");
+  label.className = "tiny-check";
+
+  const input = document.createElement("input");
+  input.type = "checkbox";
+  input.name = "__unused__";
+  input.value = value;
+  input.checked = true;
+
+  label.appendChild(input);
+  label.append(` ${value}`);
+  list.appendChild(label);
+}
+
+function syncOptionGroupInputNames(optionGroup, productId, paramKey, enabled) {
+  optionGroup.querySelectorAll('input[type="checkbox"]').forEach((input) => {
+    input.name = enabled ? `param_values__${productId}__${paramKey}` : "__unused__";
+  });
+}
+
+function createOptionGroup(productId, paramKey, options) {
   const wrapper = document.createElement("div");
   wrapper.className = "param-options";
   wrapper.dataset.paramOptions = paramKey;
+  wrapper.dataset.productId = productId;
   wrapper.hidden = true;
 
   const title = document.createElement("div");
@@ -330,21 +352,55 @@ function createOptionGroup(paramKey, options) {
   const list = document.createElement("div");
   list.className = "param-options-list";
   options.forEach((opt) => {
-    const label = document.createElement("label");
-    label.className = "tiny-check";
-
-    const input = document.createElement("input");
-    input.type = "checkbox";
-    input.name = "__unused__";
-    input.value = opt;
-    input.checked = true;
-
-    label.appendChild(input);
-    label.append(` ${opt}`);
-    list.appendChild(label);
+    createOptionCheckbox(list, opt);
   });
 
   wrapper.appendChild(list);
+
+  if (paramKey === "color") {
+    const customWrap = document.createElement("div");
+    customWrap.className = "custom-color-input";
+
+    const customInput = document.createElement("input");
+    customInput.type = "text";
+    customInput.placeholder = "Custom color (e.g. Neon Green, #39FF14)";
+
+    const addBtn = document.createElement("button");
+    addBtn.type = "button";
+    addBtn.className = "btn-add-color";
+    addBtn.textContent = "Add";
+
+    const addCustomColor = () => {
+      const raw = customInput.value.trim();
+      if (!raw) return;
+
+      const exists = Array.from(list.querySelectorAll('input[type="checkbox"]')).some(
+        (input) => input.value.toLowerCase() === raw.toLowerCase()
+      );
+      if (exists) {
+        customInput.value = "";
+        return;
+      }
+
+      createOptionCheckbox(list, raw);
+      const enabled = !wrapper.hidden;
+      syncOptionGroupInputNames(wrapper, productId, paramKey, enabled);
+      customInput.value = "";
+    };
+
+    addBtn.addEventListener("click", addCustomColor);
+    customInput.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        addCustomColor();
+      }
+    });
+
+    customWrap.appendChild(customInput);
+    customWrap.appendChild(addBtn);
+    wrapper.appendChild(customWrap);
+  }
+
   return wrapper;
 }
 
@@ -406,16 +462,11 @@ function renderProducts() {
       paramsWrap.appendChild(paramLabel);
 
       if (paramMeta.type === "select" && Array.isArray(paramMeta.options)) {
-        const optionGroup = createOptionGroup(paramKey, getParamOptionsForSport(paramKey, sport));
-        optionGroup.dataset.productId = product.id;
+        const optionGroup = createOptionGroup(product.id, paramKey, getParamOptionsForSport(paramKey, sport));
         paramsWrap.appendChild(optionGroup);
 
         paramInput.addEventListener("change", () => {
-          optionGroup
-            .querySelectorAll('input[type="checkbox"]')
-            .forEach((input) => {
-              input.name = `param_values__${product.id}__${paramKey}`;
-            });
+          syncOptionGroupInputNames(optionGroup, product.id, paramKey, paramInput.checked);
           optionGroup.hidden = !paramInput.checked;
         });
       }
