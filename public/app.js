@@ -966,16 +966,19 @@ async function loadOrder() {
   const slug = getSlug();
   if (!slug) {
     orderTitleEl.textContent = "Missing slug";
+    document.title = "Missing order - NinetyTwo";
     return;
   }
   const res = await fetch(`/api/orders/${slug}`);
   if (!res.ok) {
     orderTitleEl.textContent = "Order not found";
+    document.title = "Order not found - NinetyTwo";
     return;
   }
   order = await res.json();
   rows = order.rows.map((row) => ({ id: row.id, data: row.data || {} }));
   orderTitleEl.textContent = order.title;
+  document.title = `${order.title} - NinetyTwo`;
   const pcsLabel = (order.unitLabels && order.unitLabels.pcs) || "pcs";
   const currencyLabel = (order.unitLabels && order.unitLabels.currency) || "EUR";
   unitByKey = { height_cm: "cm", weight_kg: "kg" };
