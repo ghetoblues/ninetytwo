@@ -503,6 +503,14 @@ body.home .page {
   border: 1px solid var(--line);
 }
 
+.form input[type="checkbox"] {
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  margin: 0;
+  border-radius: 6px;
+}
+
 .form select {
   padding: 10px 12px;
   border-radius: 10px;
@@ -620,6 +628,11 @@ body.home .page {
   color: var(--ink);
 }
 
+.product-toggle strong {
+  font-size: 16px;
+  line-height: 1.15;
+}
+
 .product-params {
   border-top: 1px dashed #d7ded6;
   padding-top: 10px;
@@ -643,6 +656,10 @@ body.home .page {
   background: #f5f8f3;
   display: grid;
   gap: 8px;
+}
+
+.param-options.is-disabled {
+  opacity: 0.45;
 }
 
 .param-options-title {

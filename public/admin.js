@@ -337,6 +337,14 @@ function syncOptionGroupInputNames(optionGroup, productId, paramKey, enabled) {
   });
 }
 
+function setOptionGroupEnabled(optionGroup, productId, paramKey, enabled) {
+  syncOptionGroupInputNames(optionGroup, productId, paramKey, enabled);
+  optionGroup.classList.toggle("is-disabled", !enabled);
+  optionGroup.querySelectorAll("input, button").forEach((el) => {
+    el.disabled = !enabled;
+  });
+}
+
 function createOptionGroup(productId, paramKey, options) {
   const wrapper = document.createElement("div");
   wrapper.className = "param-options";
@@ -464,29 +472,41 @@ function renderProducts() {
       if (paramMeta.type === "select" && Array.isArray(paramMeta.options)) {
         const optionGroup = createOptionGroup(product.id, paramKey, getParamOptionsForSport(paramKey, sport));
         paramsWrap.appendChild(optionGroup);
+        optionGroup.hidden = false;
+        setOptionGroupEnabled(optionGroup, product.id, paramKey, false);
 
         paramInput.addEventListener("change", () => {
-          syncOptionGroupInputNames(optionGroup, product.id, paramKey, paramInput.checked);
-          optionGroup.hidden = !paramInput.checked;
+          setOptionGroupEnabled(optionGroup, product.id, paramKey, paramInput.checked);
         });
       }
     });
 
     productToggle.addEventListener("change", () => {
       paramsWrap.hidden = !productToggle.checked;
-      if (!productToggle.checked) {
-        paramsWrap
-          .querySelectorAll('input[type="checkbox"]')
-          .forEach((input) => {
-            input.checked = false;
-            if (input.name && input.name.startsWith("param_values__")) {
-              input.checked = true;
-            }
-          });
+      if (productToggle.checked) {
         paramsWrap
           .querySelectorAll(".param-options")
           .forEach((el) => {
-            el.hidden = true;
+            el.hidden = false;
+          });
+      }
+      if (!productToggle.checked) {
+        paramsWrap
+          .querySelectorAll(`input[name="params__${product.id}"]`)
+          .forEach((input) => {
+            input.checked = false;
+          });
+        paramsWrap
+          .querySelectorAll('[data-param-options] input[type="checkbox"]')
+          .forEach((input) => {
+            input.checked = true;
+          });
+        paramsWrap
+          .querySelectorAll('[data-param-options]')
+          .forEach((optionGroup) => {
+            const paramKey = optionGroup.dataset.paramOptions;
+            if (!paramKey) return;
+            setOptionGroupEnabled(optionGroup, product.id, paramKey, false);
           });
       }
       updateProgressiveVisibility();
@@ -518,6 +538,7 @@ function buildCustomColumns({
   const sport = sportSelect.value;
 
   const columns = [COLUMN_META.name, COLUMN_META.number];
+  let hasMeasureColumns = false;
 
   const products = PRODUCTS_BY_SPORT[sportSelect.value] || [];
   products.forEach((product) => {
@@ -538,6 +559,10 @@ function buildCustomColumns({
     product.params.forEach((paramKey) => {
       if (!selectedParams.has(paramKey)) return;
       const base = COLUMN_META[paramKey];
+      if ((paramKey === "size" || paramKey === "size_shorts") && !hasMeasureColumns) {
+        columns.push(COLUMN_META.height_cm, COLUMN_META.weight_kg);
+        hasMeasureColumns = true;
+      }
       const nextCol = { ...base };
       nextCol.options = getParamOptionsForSport(paramKey, sportSelect.value);
 
